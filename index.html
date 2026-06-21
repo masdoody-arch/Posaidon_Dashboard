@@ -115,6 +115,14 @@
   @keyframes blink{ 50%{ opacity:.35; } }
 
   /* ── HISTORY LIST ── */
+  /* ── TREND CHARTS ── */
+  .chart-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .chart-card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:12px 12px 8px; }
+  .chart-card-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+  .chart-card-head span{ font-size:0.72rem; color:var(--text-dim); }
+  .chart-card-head b{ font-family:var(--font-mono); font-size:0.92rem; color:var(--teal); font-weight:600; }
+  .chart-box{ position:relative; height:110px; }
+
   .hist-list{ display:flex; flex-direction:column; gap:1px; background:var(--line); border-radius:14px; overflow:hidden; border:1px solid var(--line); }
   .hist-row{
     background:var(--surface); padding:11px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px;
@@ -143,6 +151,7 @@
     .porthole{ width:212px; height:212px; }
     .porthole .temp-readout{ font-size:2.1rem; }
     .param-grid{ gap:8px; }
+    .chart-box{ height:92px; }
   }
   @media (prefers-reduced-motion: reduce){
     .porthole.online::before, .dosing-pill.active .dot, #refresh-btn.spinning{ animation:none !important; }
@@ -176,6 +185,14 @@
     <div class="param-card"><div class="p-label">Magnesium</div><div class="p-value" id="v-mg">--</div><div class="p-unit">ppm</div></div>
   </div>
   <div class="dosing-pill" id="dosing-pill"><div class="dot"></div><span id="dosing-text">Status dosing tidak diketahui</span></div>
+
+  <div class="section-label">Tren Parameter</div>
+  <div class="chart-grid" id="chart-grid">
+    <div class="chart-card"><div class="chart-card-head"><span>Alkalinity</span><b id="chart-now-alk">--</b></div><div class="chart-box"><canvas id="chart-alk"></canvas></div></div>
+    <div class="chart-card"><div class="chart-card-head"><span>Calcium</span><b id="chart-now-ca">--</b></div><div class="chart-box"><canvas id="chart-ca"></canvas></div></div>
+    <div class="chart-card"><div class="chart-card-head"><span>Magnesium</span><b id="chart-now-mg">--</b></div><div class="chart-box"><canvas id="chart-mg"></canvas></div></div>
+    <div class="chart-card"><div class="chart-card-head"><span>pH</span><b id="chart-now-ph">--</b></div><div class="chart-box"><canvas id="chart-ph"></canvas></div></div>
+  </div>
 
   <div class="section-label">Water Test Terakhir</div>
   <div class="hist-list" id="watertest-list"><div class="empty-note">Memuat riwayat…</div></div>
@@ -241,11 +258,13 @@ async function loadLiveStatus(){
     document.getElementById('ph-readout').textContent = 'pH ' + (d.ph!==undefined ? d.ph.toFixed(2) : '--');
     document.getElementById('last-seen').innerHTML = 'Update terakhir <b>' + fmtRelative(d.updated_at) + '</b>';
 
-    // Param cards — pakai rentang referensi umum reef (bukan target spesifik Anda,
-    // cuma panduan kasar buat warna). Sesuaikan kalau target Anda beda jauh.
-    setParam('v-alk', d.alk, 1, 'dKH', 7, 12, 6, 13);
-    setParam('v-ca', d.ca, 0, 'ppm', 380, 450, 350, 480);
-    setParam('v-mg', d.mg, 0, 'ppm', 1250, 1350, 1150, 1450);
+    // Param cards — kalau target Anda (dari Dosing Setup) udah kekirim ke Firebase,
+    // warna dihitung dari situ (target ± toleransi). Kalau channel itu belum diaktifkan
+    // di Dosing Setup (target=0), fallback ke rentang umum reef sbg panduan kasar.
+    setParamWithTarget('v-alk', d.alk, d.target_alk, 1, 'dKH', 0.6, 7, 12, 6, 13);
+    setParamWithTarget('v-ca',  d.ca,  d.target_ca,  0, 'ppm', 15,  380, 450, 350, 480);
+    setParamWithTarget('v-mg',  d.mg,  d.target_mg,  0, 'ppm', 30,  1250, 1350, 1150, 1450);
+    fbTargets = { alk:d.target_alk||0, ca:d.target_ca||0, mg:d.target_mg||0 };
 
     const pill = document.getElementById('dosing-pill');
     const active = !!d.dosing_active;
@@ -258,6 +277,19 @@ async function loadLiveStatus(){
   }
 }
 
+// tol = toleransi "OK" di sekitar target (mis. Alk target±0.6dKH = ijo, ±1.2dKH = kuning, di luar itu = merah)
+function setParamWithTarget(id, val, target, decimals, unit, tol, fbLo, fbHi, fbLoWarn, fbHiWarn){
+  let lo, hi, loWarn, hiWarn;
+  if(target && target > 0){
+    lo = target - tol; hi = target + tol;
+    loWarn = target - tol*2; hiWarn = target + tol*2;
+  } else {
+    // Channel ini belum di-set di Dosing Setup — pakai rentang umum reef sbg panduan kasar
+    lo = fbLo; hi = fbHi; loWarn = fbLoWarn; hiWarn = fbHiWarn;
+  }
+  setParam(id, val, decimals, unit, lo, hi, loWarn, hiWarn);
+}
+
 function setParam(id, val, decimals, unit, lo, hi, loWarn, hiWarn){
   const el = document.getElementById(id);
   const card = el.closest('.param-card');
@@ -268,23 +300,93 @@ function setParam(id, val, decimals, unit, lo, hi, loWarn, hiWarn){
   if(cls) card.classList.add(cls);
 }
 
+let chartInstances = [];
+let fbTargets = { alk:0, ca:0, mg:0 };
+
 async function loadWaterTests(){
   const box = document.getElementById('watertest-list');
   try{
-    const res = await fetch(FB_URL + '/water_tests.json?orderBy="$key"&limitToLast=8');
+    // Ambil 30 entri terakhir — dipakai BERSAMA buat daftar (8 terbaru) & grafik tren (semua)
+    const res = await fetch(FB_URL + '/water_tests.json?orderBy="$key"&limitToLast=30');
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const d = await res.json();
-    if(!d){ box.innerHTML = '<div class="empty-note">Belum ada water test tersimpan.</div>'; return; }
-    const rows = Object.values(d).sort((a,b)=> (b.date+b.time).localeCompare(a.date+a.time));
-    box.innerHTML = rows.map(r => `
+    if(!d){
+      box.innerHTML = '<div class="empty-note">Belum ada water test tersimpan.</div>';
+      renderTrendCharts([]);
+      return;
+    }
+    const rowsAsc  = Object.values(d).sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time));
+    const rowsDesc = [...rowsAsc].reverse().slice(0,8);
+    box.innerHTML = rowsDesc.map(r => `
       <div class="hist-row">
         <div class="h-date">${r.date||'--'}</div>
         <div class="h-mid">pH <b>${num(r.ph)}</b> · Alk <b>${num(r.alk)}</b></div>
         <div class="h-values">Ca ${num(r.ca)} · Mg ${num(r.mg)}</div>
       </div>`).join('');
+    renderTrendCharts(rowsAsc);
   } catch(e){
     box.innerHTML = '<div class="err-note">Gagal memuat riwayat water test.</div>';
   }
+}
+
+function ensureChartJs(cb){
+  if(typeof Chart !== 'undefined'){ cb(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+  s.onload = cb;
+  document.head.appendChild(s);
+}
+
+function renderTrendCharts(rows){
+  ensureChartJs(()=>{
+    chartInstances.forEach(c=>{ try{ c.destroy(); }catch(e){} });
+    chartInstances = [];
+    if(!rows.length) return;
+
+    const labels = rows.map(r => shortDate(r.date));
+    // target_xxx dari live_status (kalau Anda udah set di Dosing Setup) jadi garis referensi;
+    // kalau belum ke-set (0), garis referensi gak ditampilkan sama sekali (drpd nebak2).
+    const specs = [
+      { key:'alk', canvas:'chart-alk', now:'chart-now-alk', color:'#2dd4bf', dec:1, target:fbTargets.alk, tol:0.6 },
+      { key:'ca',  canvas:'chart-ca',  now:'chart-now-ca',  color:'#38bdf8', dec:0, target:fbTargets.ca,  tol:15  },
+      { key:'mg',  canvas:'chart-mg',  now:'chart-now-mg',  color:'#a78bfa', dec:0, target:fbTargets.mg,  tol:30  },
+      { key:'ph',  canvas:'chart-ph',  now:'chart-now-ph',  color:'#f5b350', dec:2, target:0,             tol:0   },
+    ];
+
+    specs.forEach(sp=>{
+      const canvas = document.getElementById(sp.canvas);
+      if(!canvas) return;
+      const vals = rows.map(r => (r[sp.key]!==undefined && r[sp.key]!==null) ? parseFloat(r[sp.key]) : null);
+      const last = [...vals].reverse().find(v => v!==null);
+      const nowEl = document.getElementById(sp.now);
+      if(nowEl) nowEl.textContent = last!==undefined ? last.toFixed(sp.dec) : '--';
+
+      const ptColors = vals.map(v=>{
+        if(v===null || !sp.target) return sp.color;
+        return (v < sp.target - sp.tol*2 || v > sp.target + sp.tol*2) ? '#fb7185' : sp.color;
+      });
+
+      const datasets = [{
+        data:vals, borderColor:sp.color, backgroundColor:sp.color+'22',
+        pointBackgroundColor:ptColors, pointBorderColor:ptColors, pointRadius:2.5,
+        tension:0.3, fill:true, spanGaps:true, borderWidth:1.6,
+      }];
+      if(sp.target){
+        datasets.push({ data:labels.map(()=>sp.target+sp.tol), borderColor:'#7d93a866', borderDash:[3,3], pointRadius:0, fill:false, borderWidth:1 });
+        datasets.push({ data:labels.map(()=>sp.target-sp.tol), borderColor:'#7d93a866', borderDash:[3,3], pointRadius:0, fill:false, borderWidth:1 });
+      }
+
+      const inst = new Chart(canvas, { type:'line', data:{ labels, datasets }, options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ctx.parsed.y } } },
+        scales:{
+          x:{ ticks:{ color:'#4a6072', font:{size:8}, maxRotation:0, autoSkip:true, maxTicksLimit:4 }, grid:{ display:false } },
+          y:{ ticks:{ color:'#4a6072', font:{size:8} }, grid:{ color:'#1f314255' } }
+        }
+      }});
+      chartInstances.push(inst);
+    });
+  });
 }
 
 async function loadDoseLog(){
@@ -313,7 +415,12 @@ function num(v){ return (v===undefined||v===null) ? '--' : (typeof v==='number' 
 function shortDate(d){ if(!d) return '--'; const p=d.split('-'); return p.length===3 ? p[2]+'/'+p[1] : d; }
 
 async function refreshAll(){
-  await Promise.all([loadLiveStatus(), loadWaterTests(), loadDoseLog()]);
+  // loadLiveStatus dijalankan duluan & ditunggu — dia ngisi fbTargets yg dipakai
+  // loadWaterTests buat gambar garis referensi target di chart. Kalau dijalanin
+  // barengan (Promise.all), race-condition: chart pertama kali render bisa gak
+  // dapet target krn loadLiveStatus belum tentu selesai duluan.
+  await loadLiveStatus();
+  await Promise.all([loadWaterTests(), loadDoseLog()]);
 }
 
 function manualRefresh(){
