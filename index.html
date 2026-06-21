@@ -37,22 +37,6 @@
   }
   .wrap{max-width:640px; margin:0 auto;}
 
-  /* ── ITEM #2: RESPONSIVE DESKTOP — sebelumnya dipaksa kolom tunggal max-width:640px
-     di SEMUA ukuran layar, jadi di PC keliatan numpuk/cramped kayak versi mobile yg
-     di-stretch doang, byk ruang kosong di kanan-kiri. Di layar lebar, kartu parameter
-     (Alk/Ca/Mg/Kalk) ditata grid 2 kolom (cocok sama tampilan Dosing Setup lokal yg
-     udah duluan 2 kolom), wrap diperlebar biar gak ada ruang kosong percuma. ── */
-  @media (min-width:768px){
-    .wrap{ max-width:980px; }
-    .dose-card-list{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-    .hero-gauge-row{ gap:18px; }
-    .gauge-unit{ max-width:220px; padding:18px 14px 14px; }
-    .gauge-unit svg{ width:150px; height:96px; }
-  }
-  @media (min-width:1100px){
-    .wrap{ max-width:1180px; }
-  }
-
   /* ── HEADER ── */
   header{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;}
   .brand{display:flex; align-items:center; gap:10px;}
@@ -80,6 +64,7 @@
   .status-badge.online{ color:var(--teal); border-color:var(--teal-dim); }
   .status-badge.offline .status-dot{ background:var(--coral); box-shadow:0 0 6px var(--coral); }
   .status-badge.offline{ color:var(--coral); border-color:rgba(251,113,133,0.3); }
+  @keyframes blink{ 50%{ opacity:.35; } }
 
   .last-seen{ text-align:center; font-size:0.74rem; color:var(--text-faint); margin:0 0 18px; }
   .last-seen b{ color:var(--text-dim); font-weight:500; }
@@ -105,15 +90,26 @@
   }
   .gauge-unit-label{ font-size:0.7rem; margin-bottom:4px; letter-spacing:0.02em; }
 
-  .dosing-pill{
-    margin-top:16px; display:flex; align-items:center; justify-content:center; gap:8px;
-    background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:9px 16px;
-    font-size:0.78rem; color:var(--text-dim);
+  /* ── ITEM #1b: DOSE STATUS — mirroring widget Previous/Now/Next dari dashboard lokal,
+     gantiin pill generik "ada/gak ada dosing aktif". Countdown di-tick client-side tiap
+     detik dari snapshot remSec yg dikirim server (gak perlu polling tiap detik). ── */
+  .dose-status-card{
+    margin-top:16px; background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:14px 16px;
   }
-  .dosing-pill .dot{ width:6px; height:6px; border-radius:50%; background:var(--text-faint); }
-  .dosing-pill.active .dot{ background:var(--teal); box-shadow:0 0 6px var(--teal); animation:blink 1.4s ease-in-out infinite; }
-  .dosing-pill.active{ color:var(--teal); border-color:var(--teal-dim); }
-  @keyframes blink{ 50%{ opacity:.35; } }
+  .ds-label{ text-align:center; font-size:0.82rem; font-weight:600; color:var(--text-dim); margin-bottom:4px; }
+  .ds-countdown{
+    text-align:center; font-family:var(--font-mono); font-size:1.9rem; font-weight:700;
+    letter-spacing:2px; color:var(--text-faint); margin-bottom:10px; font-variant-numeric:tabular-nums;
+  }
+  .ds-countdown.running{ color:var(--amber); }
+  .ds-prevnext{ display:flex; justify-content:space-between; border-top:1px solid var(--line); padding-top:10px; gap:10px; }
+  .ds-pn-col{ flex:1; min-width:0; }
+  .ds-pn-label{ font-size:0.62rem; color:var(--text-faint); letter-spacing:0.04em; margin-bottom:2px; }
+  .ds-pn-val{ font-size:0.8rem; font-weight:600; color:var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ds-pn-val.prev{ color:var(--coral); }
+  .ds-pn-val.next{ color:#38bdf8; }
+  .ds-pn-divider{ width:1px; background:var(--line); flex-shrink:0; }
 
   /* ── DOSE CARDS (gaya sama kayak Dosing Setup di dashboard utama, minus kontrol) ── */
   .dose-card-list{ display:flex; flex-direction:column; gap:10px; }
@@ -124,9 +120,23 @@
   .dose-badge{ font-size:0.64rem; padding:3px 9px; border-radius:999px; font-family:var(--font-mono); background:var(--teal-dim); color:var(--teal); white-space:nowrap; }
   .dose-badge.low{ background:#f5b35022; color:var(--amber); }
   .dose-badge.high{ background:#fb718522; color:var(--coral); }
-  .dose-value-row{ display:flex; align-items:baseline; gap:5px; margin-bottom:6px; }
+  .dose-value-row{ display:flex; align-items:center; gap:5px; margin-bottom:6px; }
   .dose-value-row .dv-num{ font-family:var(--font-mono); font-weight:700; font-size:1.7rem; color:var(--text); }
   .dose-value-row .dv-unit{ font-size:0.74rem; color:var(--text-dim); }
+  .dose-value-row .dv-gauge{ margin-left:auto; flex-shrink:0; line-height:0; }
+
+  /* ── ITEM #7: CHART + INSIGHT (halaman Riwayat Water Test) ── */
+  .chart-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:14px 16px; margin-bottom:10px;
+  }
+  .chart-card-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+  .chart-card-head .cc-label{ font-weight:600; font-size:0.85rem; }
+  .chart-card-head .cc-val{ font-family:var(--font-mono); font-size:0.95rem; font-weight:700; }
+  .chart-axis-row{ display:flex; justify-content:space-between; font-size:0.62rem; color:var(--text-faint); margin:2px 0 8px; }
+  .chart-insight{ font-size:0.74rem; color:var(--text-dim); border-top:1px solid var(--line); padding-top:8px; line-height:1.5; }
+  .chart-insight b{ color:var(--text); }
+
   .dose-tip{ font-size:0.7rem; color:var(--text-dim); background:var(--surface-2); border-radius:8px; padding:6px 9px; margin-bottom:6px; line-height:1.4; }
   .dose-rate{ font-size:0.72rem; color:var(--text-dim); margin-bottom:8px; font-family:var(--font-mono); }
   .dose-spark-row{ display:flex; align-items:center; gap:10px; margin-bottom:6px; }
@@ -175,6 +185,23 @@
   }
   @media (prefers-reduced-motion: reduce){
     .status-badge.online .status-dot, .dosing-pill.active .dot, #refresh-btn.spinning{ animation:none !important; }
+  }
+
+  /* ── ITEM #2/#3: RESPONSIVE DESKTOP — DITARUH DI AKHIR style BLOCK SECARA SENGAJA.
+     CSS cascade: kalau dua rule spesifisitasnya sama, yg posisinya BELAKANGAN di file yg
+     menang — gak peduli yg duluan ada di dalam media query atau nggak. Sebelumnya block
+     ini ditaruh di ATAS (dekat .wrap), jadi ketimpa balik sama base rule .dose-card-list
+     yg posisinya lebih belakang → makanya di PC tetep numpuk 1 kolom walau breakpoint-nya
+     udah kena. Taruh di paling akhir biar PASTI menang di lebar layar yg sesuai. ── */
+  @media (min-width:768px){
+    .wrap{ max-width:980px; }
+    .dose-card-list{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .hero-gauge-row{ gap:18px; }
+    .gauge-unit{ max-width:220px; padding:18px 14px 14px; }
+    .gauge-unit svg{ width:150px; height:96px; }
+  }
+  @media (min-width:1100px){
+    .wrap{ max-width:1180px; }
   }
 </style>
 </head>
@@ -225,6 +252,15 @@
         <text x="55" y="72" text-anchor="middle" font-size="9" fill="#7d93a8">%</text>
       </svg>
     </div>
+    <div class="gauge-unit" id="gauge-ph-wrap" style="display:none;">
+      <div class="gauge-unit-label" style="color:#22c55e">pH</div>
+      <svg width="128" height="82" viewBox="0 0 110 78">
+        <path d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#152330" stroke-width="10" stroke-linecap="round"/>
+        <path id="gauge-ph-arc" d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 141"/>
+        <text id="gauge-ph-txt" x="55" y="58" text-anchor="middle" font-size="20" font-weight="700" fill="#22c55e" font-family="'JetBrains Mono',monospace">--</text>
+        <text x="55" y="72" text-anchor="middle" font-size="9" fill="#7d93a8">pH</text>
+      </svg>
+    </div>
   </div>
 
   <div class="tab-nav">
@@ -233,7 +269,21 @@
   </div>
 
   <div id="view-dashboard">
-    <div class="dosing-pill" id="dosing-pill"><div class="dot"></div><span id="dosing-text">Status dosing tidak diketahui</span></div>
+    <div class="dose-status-card">
+      <div class="ds-label" id="ds-label">Memuat status dosing…</div>
+      <div class="ds-countdown" id="ds-countdown">--:--:--</div>
+      <div class="ds-prevnext">
+        <div class="ds-pn-col">
+          <div class="ds-pn-label">◀ SEBELUMNYA</div>
+          <div class="ds-pn-val prev" id="ds-prev">--</div>
+        </div>
+        <div class="ds-pn-divider"></div>
+        <div class="ds-pn-col" style="text-align:right">
+          <div class="ds-pn-label">BERIKUTNYA ▷</div>
+          <div class="ds-pn-val next" id="ds-next">--</div>
+        </div>
+      </div>
+    </div>
 
     <div class="section-label">Tren Parameter</div>
     <div class="dose-card-list" id="dose-card-list">
@@ -245,6 +295,9 @@
   </div>
 
   <div id="view-history" style="display:none;">
+    <div class="section-label">Tren &amp; Insight</div>
+    <div id="watertest-charts"><div class="empty-note">Memuat tren…</div></div>
+
     <div class="section-label">Riwayat Water Test</div>
     <div class="hist-list" id="watertest-list"><div class="empty-note">Memuat riwayat…</div></div>
   </div>
@@ -329,24 +382,15 @@ function applyLiveStatus(d){
     if(humWrap) humWrap.style.display = 'none';
   }
 
-  // FIX item#5: mirroring status dosing kayak di dashboard lokal — tampilin CHANNEL MANA
-  // yg lagi aktif (bukan cuma ya/tidak gabungan), pakai dosing_ch[] (4 bool) dari firmware.
-  const pill = document.getElementById('dosing-pill');
-  const chArr = d.dosing_ch || [false,false,false,false];
-  const activeChs = chArr.map((on,i)=>on?i:-1).filter(i=>i>=0);
-  const active = activeChs.length>0;
-  pill.classList.toggle('active', active);
-  let label = 'Tidak ada dosing aktif';
-  if(active && dosingConfig){
-    label = activeChs.map(i=>{
-      const cfg = dosingConfig['ch'+(i+1)];
-      const elemLabel = cfg ? (ELEM_LABEL[cfg.element]||cfg.element) : '?';
-      return `Pump ${i+1} ${elemLabel}`;
-    }).join(' · ') + ' sedang dosing…';
-  } else if(active){
-    label = 'Dosing sedang berjalan';
+  // Item #8: gauge pH — cuma muncul kalau probe pH aktif & terbaca (ph_live). Kalau user
+  // gak pasang probe, gauge ini disembunyikan total (bukan nunjukin pH dari water test lama).
+  const phWrap = document.getElementById('gauge-ph-wrap');
+  if(d.ph_live){
+    if(phWrap) phWrap.style.display = '';
+    setGaugeArc('ph', d.ph, 7.5, 8.6, 2);
+  } else {
+    if(phWrap) phWrap.style.display = 'none';
   }
-  document.getElementById('dosing-text').textContent = label;
 }
 
 async function loadLiveStatus(){
@@ -387,6 +431,77 @@ function connectLiveStream(){
   };
 }
 
+// ── ITEM #1b: DOSE STATUS (Previous / Now+Countdown / Next) ─────────────────
+// Mirroring widget yg ada di dashboard lokal. Server kirim snapshot remSec, kita
+// tick lokal tiap detik (gak perlu polling tiap detik — sama pola kayak local punya).
+let _dsCountdownInterval = null;
+function fmtSlotLabel(d){
+  if(!d) return '--';
+  const elemLabel = ELEM_LABEL[d.elem] || d.elem || '?';
+  const h = String(Math.floor(d.slotMin/60)).padStart(2,'0');
+  const m = String(d.slotMin%60).padStart(2,'0');
+  return `Pump ${d.ch+1} ${elemLabel} · ${h}:${m} · ${num(d.ml)}ml`;
+}
+function applyDoseStatus(d){
+  if(!d) d = {};
+  const labelEl = document.getElementById('ds-label');
+  const cdEl = document.getElementById('ds-countdown');
+  document.getElementById('ds-prev').textContent = fmtSlotLabel(d.prev);
+  document.getElementById('ds-next').textContent = fmtSlotLabel(d.next);
+
+  if(_dsCountdownInterval){ clearInterval(_dsCountdownInterval); _dsCountdownInterval=null; }
+
+  if(d.curr && d.curr.remSec > 0){
+    const elemLabel = ELEM_LABEL[d.curr.elem] || d.curr.elem || '?';
+    labelEl.textContent = `Pump ${d.curr.ch+1} ${elemLabel} sedang dosing… (${num(d.curr.ml)}ml)`;
+    cdEl.classList.add('running');
+    let remSec = d.curr.remSec;
+    const tick = ()=>{
+      if(remSec <= 0){ clearInterval(_dsCountdownInterval); _dsCountdownInterval=null; loadDoseStatus(); return; }
+      const hh = String(Math.floor(remSec/3600)).padStart(2,'0');
+      const mm = String(Math.floor((remSec%3600)/60)).padStart(2,'0');
+      const ss = String(remSec%60).padStart(2,'0');
+      cdEl.textContent = `${hh}:${mm}:${ss}`;
+      remSec--;
+    };
+    tick();
+    _dsCountdownInterval = setInterval(tick, 1000);
+  } else {
+    labelEl.textContent = 'Tidak ada dosing aktif';
+    cdEl.classList.remove('running');
+    cdEl.textContent = '--:--:--';
+  }
+}
+
+async function loadDoseStatus(){
+  try{
+    const res = await fetch(FB_URL + '/dose_status.json');
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const d = await res.json();
+    applyDoseStatus(d);
+  } catch(e){
+    console.warn('[dose_status] gagal memuat', e);
+  }
+}
+
+let doseStatusStream = null;
+function connectDoseStatusStream(){
+  if(!window.EventSource) return;
+  if(doseStatusStream) doseStatusStream.close();
+  doseStatusStream = new EventSource(FB_URL + '/dose_status.json');
+  doseStatusStream.addEventListener('put', (e)=>{
+    try{
+      const payload = JSON.parse(e.data);
+      if(payload.path === '/' && payload.data){
+        applyDoseStatus(payload.data);
+      }
+    } catch(err){ console.warn('[SSE dose_status] parse error', err); }
+  });
+  doseStatusStream.onerror = ()=>{
+    console.warn('[SSE dose_status] koneksi terputus, browser reconnect otomatis…');
+  };
+}
+
 let dosingConfig = null;
 
 async function loadDosingConfig(){
@@ -420,6 +535,7 @@ async function loadWaterTests(){
         <div class="h-values">Ca ${num(r.ca)} · Mg ${num(r.mg)}</div>
       </div>`).join('');
     renderDoseCards(rowsAsc);
+    renderWaterTestCharts(rowsAsc);
   } catch(e){
     box.innerHTML = '<div class="err-note">Gagal memuat riwayat water test.</div>';
   }
@@ -439,13 +555,88 @@ function buildSparkline(vals, color){
   </svg>`;
 }
 
+// Item #7: chart penuh (lebih besar, ada gridline + titik + garis target putus-putus)
+// buat halaman Riwayat Water Test — beda dari sparkline mini di kartu dashboard utama.
+function buildFullChart(vals, color, target){
+  const w=300, h=100, pad=6;
+  const pts = vals.map((v,i)=>({v,i})).filter(o=>o.v!==null);
+  if(pts.length<2) return `<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}"><text x="${w/2}" y="${h/2}" text-anchor="middle" font-size="11" fill="#4a6072">Data belum cukup</text></svg>`;
+  let min = Math.min(...pts.map(o=>o.v)), max = Math.max(...pts.map(o=>o.v));
+  if(target>0){ min = Math.min(min, target); max = Math.max(max, target); }
+  const range = (max-min) || 1;
+  const yOf = v => h-pad-((v-min)/range)*(h-pad*2);
+  const step = (w-pad*2)/((vals.length-1)||1);
+  const line = pts.map(o => (pad+o.i*step).toFixed(1)+','+yOf(o.v).toFixed(1)).join(' ');
+  const dots = pts.map(o => `<circle cx="${(pad+o.i*step).toFixed(1)}" cy="${yOf(o.v).toFixed(1)}" r="2" fill="${color}"/>`).join('');
+  const targetLine = target>0 ? `<line x1="${pad}" y1="${yOf(target).toFixed(1)}" x2="${w-pad}" y2="${yOf(target).toFixed(1)}" stroke="#4a6072" stroke-width="1" stroke-dasharray="3 3"/>` : '';
+  return `<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="overflow:visible;">
+    ${targetLine}
+    <polyline points="${line}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}
+  </svg>`;
+}
+
+// Insight ringkas — arah tren (naik/turun/stabil, bandingin rata2 3 data terakhir vs
+// 3 sblmnya) + posisi relatif ke target. Sengaja gak sekompleks engine rekomendasi dosing
+// di lokal (itu butuh konteks live spesifik); ini cuma ringkasan buat halaman publik.
+function computeInsight(vals, sp, target){
+  const pts = vals.filter(v=>v!==null);
+  if(pts.length<2) return 'Data belum cukup untuk menilai tren.';
+  const last = pts[pts.length-1];
+  let trendTxt = '';
+  if(pts.length>=4){
+    const recent = pts.slice(-3), older = pts.slice(-6,-3).length?pts.slice(-6,-3):pts.slice(0,-3);
+    const avgRecent = recent.reduce((a,b)=>a+b,0)/recent.length;
+    const avgOlder = older.reduce((a,b)=>a+b,0)/older.length;
+    const diff = avgRecent-avgOlder;
+    if(Math.abs(diff) < sp.tol*0.3) trendTxt = 'Tren stabil';
+    else trendTxt = diff>0 ? 'Tren naik' : 'Tren turun';
+  } else {
+    const diff = pts[pts.length-1]-pts[0];
+    trendTxt = Math.abs(diff)<sp.tol*0.3 ? 'Tren stabil' : (diff>0?'Tren naik':'Tren turun');
+  }
+  let targetTxt = '';
+  if(target>0){
+    const gap = last-target;
+    if(Math.abs(gap) <= sp.tol) targetTxt = `, sudah dekat target <b>${target.toFixed(sp.dec)}${sp.unit}</b>.`;
+    else targetTxt = `, ${Math.abs(gap).toFixed(sp.dec)}${sp.unit} ${gap<0?'di bawah':'di atas'} target <b>${target.toFixed(sp.dec)}${sp.unit}</b>.`;
+  } else {
+    targetTxt = ' (target belum di-set).';
+  }
+  return `${trendTxt} — nilai terakhir <b>${last.toFixed(sp.dec)}${sp.unit}</b>${targetTxt}`;
+}
+
+function renderWaterTestCharts(rowsAsc){
+  const box = document.getElementById('watertest-charts');
+  if(!box) return;
+  if(!rowsAsc.length){ box.innerHTML = '<div class="empty-note">Belum ada water test tersimpan.</div>'; return; }
+  box.innerHTML = DOSE_SPECS.map(sp=>{
+    const vals = rowsAsc.map(r => (r[sp.key]!==undefined && r[sp.key]!==null) ? parseFloat(r[sp.key]) : null);
+    const valid = vals.filter(v=>v!==null);
+    if(!valid.length) return '';
+    const last = valid[valid.length-1];
+    const ch = findDosingCh(sp.chem);
+    const target = ch ? ch.target : 0;
+    return `
+    <div class="chart-card">
+      <div class="chart-card-head">
+        <span class="cc-label">${sp.icon} ${sp.label}</span>
+        <span class="cc-val" style="color:${sp.color}">${last.toFixed(sp.dec)} ${sp.unit}</span>
+      </div>
+      ${buildFullChart(vals, sp.color, target)}
+      <div class="chart-axis-row"><span>${rowsAsc[0].date||''}</span><span>${rowsAsc[rowsAsc.length-1].date||''}</span></div>
+      <div class="chart-insight">${computeInsight(valid, sp, target)}</div>
+    </div>`;
+  }).join('');
+}
+
 // Param yg ditampilin sbg kartu — pH gak punya dosing channel langsung (dikontrol lewat
 // Kalk, bukan didosis langsung), jadi kartunya lebih simpel (gak ada botol/jadwal/mode).
 const DOSE_SPECS = [
-  { key:'alk', label:'Alkalinity', icon:'🧪', unit:'dKH', dec:1, color:'#38bdf8', tol:0.6, chem:'alk' },
-  { key:'ca',  label:'Calcium',    icon:'🦴', unit:'ppm', dec:0, color:'#10b981', tol:15,  chem:'ca'  },
-  { key:'mg',  label:'Magnesium',  icon:'💎', unit:'ppm', dec:0, color:'#f59e0b', tol:30,  chem:'mg'  },
-  { key:'ph',  label:'pH',         icon:'🌊', unit:'',    dec:2, color:'#a78bfa', tol:0.1, chem:null  },
+  { key:'alk', label:'Alkalinity', icon:'🧪', unit:'dKH', dec:1, color:'#38bdf8', tol:0.6, chem:'alk', gmin:4,    gmax:14   },
+  { key:'ca',  label:'Calcium',    icon:'🦴', unit:'ppm', dec:0, color:'#10b981', tol:15,  chem:'ca',  gmin:300,  gmax:550  },
+  { key:'mg',  label:'Magnesium',  icon:'💎', unit:'ppm', dec:0, color:'#f59e0b', tol:30,  chem:'mg',  gmin:1100, gmax:1600 },
+  { key:'ph',  label:'pH',         icon:'🌊', unit:'',    dec:2, color:'#a78bfa', tol:0.1, chem:null,  gmin:7.5,  gmax:8.6  },
 ];
 
 function findDosingCh(chem){
@@ -455,6 +646,25 @@ function findDosingCh(chem){
     if(c && c.element===chem && c.enabled) return Object.assign({pump:i}, c);
   }
   return null;
+}
+
+// Item #2: mini arc gauge inline di kartu parameter (Alkalinity dll), sama gaya kayak
+// gauge sensor suhu. Rentangnya dipusatkan di TARGET asli user (±3x toleransi) kalau ada,
+// biar lebih personal — fallback ke rentang generik kalau channel/target belum di-set.
+function buildMiniGauge(val, gmin, gmax, color, dec){
+  if(val===null || val===undefined || isNaN(val)){
+    return `<svg width="64" height="42" viewBox="0 0 110 78" class="mini-gauge">
+      <path d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#152330" stroke-width="11" stroke-linecap="round"/>
+    </svg>`;
+  }
+  const clamped = Math.max(gmin, Math.min(gmax, val));
+  const frac = gmax>gmin ? (clamped-gmin)/(gmax-gmin) : 0;
+  const arcLen = 141; // sama kayak setGaugeArc — semicircle r=45
+  const dash = (frac*arcLen).toFixed(1)+' '+arcLen;
+  return `<svg width="64" height="42" viewBox="0 0 110 78" class="mini-gauge">
+    <path d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#152330" stroke-width="11" stroke-linecap="round"/>
+    <path d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="${color}" stroke-width="11" stroke-linecap="round" stroke-dasharray="${dash}"/>
+  </svg>`;
 }
 
 function renderDoseCards(rows){
@@ -482,6 +692,15 @@ function renderDoseCards(rows){
       const diff = last-prev;
       trendTxt += diff>0.001 ? ' ↑' : diff<-0.001 ? ' ↓' : ' →';
     }
+
+    // Item #2: rentang gauge dipusatkan di target asli user (±3x toleransi) kalau channel-nya
+    // di-set, biar lebih personal drpd cuma rentang generik reef yg belum tentu cocok.
+    let gmin = sp.gmin, gmax = sp.gmax;
+    if(ch && ch.target>0){
+      gmin = ch.target - sp.tol*3;
+      gmax = ch.target + sp.tol*3;
+    }
+    const miniGaugeHtml = buildMiniGauge(last, gmin, gmax, sp.color, sp.dec);
 
     let infoTop='', infoBottom='';
     if(ch){
@@ -524,7 +743,10 @@ function renderDoseCards(rows){
           <div class="dose-name">${sp.icon} ${sp.label}${ch?` <span class="pump-tag">— Pump ${ch.pump}</span>`:''}</div>
           ${badgeTxt ? `<div class="dose-badge ${badgeCls}">${badgeTxt}</div>` : ''}
         </div>
-        <div class="dose-value-row"><span class="dv-num">${last!==null?last.toFixed(sp.dec):'--'}</span><span class="dv-unit">${sp.unit}</span></div>
+        <div class="dose-value-row">
+          <span class="dv-num">${last!==null?last.toFixed(sp.dec):'--'}</span><span class="dv-unit">${sp.unit}</span>
+          <span class="dv-gauge">${miniGaugeHtml}</span>
+        </div>
         ${infoTop}
         <div class="dose-spark-row">${buildSparkline(vals, sp.color)}<div class="dose-spark-meta">${rows.length} data<br><b>${trendTxt}</b></div></div>
         ${infoBottom}
@@ -562,7 +784,7 @@ function shortDate(d){ if(!d) return '--'; const p=d.split('-'); return p.length
 async function refreshAll(){
   // loadDosingConfig ditunggu duluan — dia ngisi dosingConfig yg dipakai renderDoseCards
   // (lewat loadWaterTests) buat nampilin info botol/jadwal/mode/max-dose tiap kartu param.
-  await Promise.all([loadLiveStatus(), loadDosingConfig()]);
+  await Promise.all([loadLiveStatus(), loadDosingConfig(), loadDoseStatus()]);
   await Promise.all([loadWaterTests(), loadDoseLog()]);
 }
 
@@ -582,6 +804,7 @@ function switchView(view){
 
 refreshAll();
 connectLiveStream(); // FIX item#8: live_status real-time via SSE, gak nunggu interval
+connectDoseStatusStream(); // Item#1b: prev/curr/next dosing real-time via SSE jg
 refreshTimer = setInterval(refreshAll, REFRESH_MS); // fallback/resync + refresh config & history
 </script>
 </body>
