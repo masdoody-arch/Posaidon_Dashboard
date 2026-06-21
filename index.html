@@ -37,12 +37,29 @@
   }
   .wrap{max-width:640px; margin:0 auto;}
 
+  /* ── ITEM #2: RESPONSIVE DESKTOP — sebelumnya dipaksa kolom tunggal max-width:640px
+     di SEMUA ukuran layar, jadi di PC keliatan numpuk/cramped kayak versi mobile yg
+     di-stretch doang, byk ruang kosong di kanan-kiri. Di layar lebar, kartu parameter
+     (Alk/Ca/Mg/Kalk) ditata grid 2 kolom (cocok sama tampilan Dosing Setup lokal yg
+     udah duluan 2 kolom), wrap diperlebar biar gak ada ruang kosong percuma. ── */
+  @media (min-width:768px){
+    .wrap{ max-width:980px; }
+    .dose-card-list{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .hero-gauge-row{ gap:18px; }
+    .gauge-unit{ max-width:220px; padding:18px 14px 14px; }
+    .gauge-unit svg{ width:150px; height:96px; }
+  }
+  @media (min-width:1100px){
+    .wrap{ max-width:1180px; }
+  }
+
   /* ── HEADER ── */
-  header{display:flex; align-items:center; justify-content:space-between; margin-bottom:28px;}
+  header{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;}
   .brand{display:flex; align-items:center; gap:10px;}
   .brand-mark{font-size:1.4rem;}
   .brand-text{font-family:var(--font-display); font-weight:600; font-size:1.05rem; letter-spacing:0.01em;}
   .brand-text span{color:var(--text-dim); font-weight:400; font-size:0.8rem; display:block; margin-top:-2px;}
+  .header-right{ display:flex; align-items:center; gap:10px; }
   #refresh-btn{
     background:var(--surface-2); border:1px solid var(--line); color:var(--text-dim);
     width:38px; height:38px; border-radius:10px; cursor:pointer; font-size:1rem;
@@ -52,38 +69,27 @@
   #refresh-btn.spinning{animation:spin 0.8s linear infinite;}
   @keyframes spin{ to{transform:rotate(360deg);} }
 
-  /* ── PORTHOLE HERO (signature element — status ring) ── */
-  .porthole-stage{ display:flex; justify-content:center; margin-bottom:4px; }
-  .porthole{
-    position:relative; width:152px; height:152px; border-radius:50%;
-    background:radial-gradient(circle at 38% 32%, #1a3344 0%, #0a141d 72%, #060c12 100%);
-    border:8px solid var(--surface-2);
-    box-shadow: 0 0 0 2px var(--line), inset 0 0 30px #000a, 0 18px 36px -16px #000c;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    overflow:hidden;
+  /* ── STATUS BADGE (item #4 — status online dipindah ke header, bukan lingkaran besar) ── */
+  .status-badge{
+    display:flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px;
+    background:var(--surface); border:1px solid var(--line); font-size:0.72rem;
+    letter-spacing:0.04em; text-transform:uppercase; color:var(--text-dim);
   }
-  .porthole::before{ /* glowing ring that pulses when data is fresh */
-    content:''; position:absolute; inset:-2px; border-radius:50%;
-    border:2px solid var(--teal); opacity:0; pointer-events:none;
-  }
-  .porthole.online::before{ opacity:.55; animation:pulse-ring 2.6s ease-in-out infinite; }
-  .porthole.offline::before{ border-color:var(--coral); opacity:.5; animation:none; }
-  @keyframes pulse-ring{
-    0%,100%{ box-shadow:0 0 0 0 var(--teal-dim); }
-    50%{ box-shadow:0 0 0 10px transparent; }
-  }
-  .porthole .status-dot{
-    width:7px; height:7px; border-radius:50%; background:var(--text-faint); margin-bottom:6px;
-  }
-  .porthole.online .status-dot{ background:var(--teal); box-shadow:0 0 8px var(--teal); }
-  .porthole.offline .status-dot{ background:var(--coral); box-shadow:0 0 8px var(--coral); }
-  .porthole .status-label{
-    font-size:0.7rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-dim);
-  }
-  .last-seen{ text-align:center; font-size:0.74rem; color:var(--text-faint); margin:16px 0 4px; }
-  .source-tag{ text-align:center; font-size:0.66rem; color:var(--text-faint); margin-bottom:6px; letter-spacing:0.01em; }
-  .source-tag .stale{ color:var(--amber); }
+  .status-badge .status-dot{ width:7px; height:7px; border-radius:50%; background:var(--text-faint); }
+  .status-badge.online .status-dot{ background:var(--teal); box-shadow:0 0 6px var(--teal); animation:blink 2s ease-in-out infinite; }
+  .status-badge.online{ color:var(--teal); border-color:var(--teal-dim); }
+  .status-badge.offline .status-dot{ background:var(--coral); box-shadow:0 0 6px var(--coral); }
+  .status-badge.offline{ color:var(--coral); border-color:rgba(251,113,133,0.3); }
+
+  .last-seen{ text-align:center; font-size:0.74rem; color:var(--text-faint); margin:0 0 18px; }
   .last-seen b{ color:var(--text-dim); font-weight:500; }
+
+  .tab-nav{ display:flex; gap:8px; margin-bottom:18px; }
+  .tab-btn{
+    flex:1; padding:9px; border-radius:10px; border:1px solid var(--line); background:var(--surface);
+    color:var(--text-dim); font-size:0.78rem; cursor:pointer; font-family:inherit;
+  }
+  .tab-btn.active{ background:var(--teal-dim); color:var(--teal); border-color:var(--teal-dim); font-weight:500; }
 
   .section-label{
     font-family:var(--font-display); font-size:0.72rem; letter-spacing:0.14em; text-transform:uppercase;
@@ -91,13 +97,13 @@
   }
   .section-label::after{ content:''; flex:1; height:1px; background:var(--line); }
 
-  /* ── SENSOR GAUGES (suhu air/ruang, kelembapan) ── */
-  .sensor-gauge-row{ display:flex; justify-content:center; gap:8px; flex-wrap:wrap; }
+  /* ── HERO GAUGES (item #3 — gantiin lingkaran online kosong, ukuran diperbesar) ── */
+  .hero-gauge-row{ display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
   .gauge-unit{
-    background:var(--surface); border:1px solid var(--line); border-radius:14px;
-    padding:10px 6px 6px; text-align:center; flex:1; min-width:96px; max-width:140px;
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:14px 10px 10px; text-align:center; flex:1; min-width:120px; max-width:170px;
   }
-  .gauge-unit-label{ font-size:0.64rem; margin-bottom:2px; letter-spacing:0.02em; }
+  .gauge-unit-label{ font-size:0.7rem; margin-bottom:4px; letter-spacing:0.02em; }
 
   .dosing-pill{
     margin-top:16px; display:flex; align-items:center; justify-content:center; gap:8px;
@@ -145,6 +151,7 @@
   .hist-row .h-date{ font-size:0.72rem; color:var(--text-faint); min-width:78px; }
   .hist-row .h-mid{ flex:1; font-size:0.78rem; color:var(--text-dim); }
   .hist-row .h-mid b{ color:var(--text); font-weight:500; }
+  .hist-row .h-reason{ font-size:0.66rem; color:var(--text-faint); margin-top:2px; }
   .hist-row .h-values{ font-family:var(--font-mono); font-size:0.72rem; color:var(--text-dim); text-align:right; }
   .hist-row .badge{
     font-size:0.64rem; padding:3px 8px; border-radius:999px; font-family:var(--font-mono);
@@ -163,12 +170,11 @@
   footer a{ color:var(--text-dim); }
 
   @media (max-width:380px){
-    .porthole{ width:128px; height:128px; }
-    .gauge-unit{ min-width:84px; padding:8px 4px 4px; }
+    .gauge-unit{ min-width:96px; padding:10px 6px 6px; }
     .dose-card{ padding:11px 12px; }
   }
   @media (prefers-reduced-motion: reduce){
-    .porthole.online::before, .dosing-pill.active .dot, #refresh-btn.spinning{ animation:none !important; }
+    .status-badge.online .status-dot, .dosing-pill.active .dot, #refresh-btn.spinning{ animation:none !important; }
   }
 </style>
 </head>
@@ -180,65 +186,72 @@
       <div class="brand-mark">🔱</div>
       <div class="brand-text">Posaidon<span>Remote Watch</span></div>
     </div>
-    <button id="refresh-btn" onclick="manualRefresh()" aria-label="Refresh">⟳</button>
+    <div class="header-right">
+      <div class="status-badge offline" id="status-badge">
+        <div class="status-dot"></div>
+        <span id="status-label">…</span>
+      </div>
+      <button id="refresh-btn" onclick="manualRefresh()" aria-label="Refresh">⟳</button>
+    </div>
   </header>
 
-  <div class="porthole-stage">
-    <div class="porthole offline" id="porthole">
-      <div class="status-dot"></div>
-      <div class="status-label" id="status-label">Menghubungkan…</div>
-    </div>
-  </div>
   <div class="last-seen" id="last-seen">Memuat data terakhir…</div>
-  <div class="source-tag" id="source-tag"></div>
 
-  <div class="section-label">Kondisi Sensor</div>
-  <div class="sensor-gauge-row" id="sensor-gauge-row">
+  <div class="hero-gauge-row" id="sensor-gauge-row">
     <div class="gauge-unit">
       <div class="gauge-unit-label" style="color:#06b6d4">Suhu Air</div>
-      <svg width="84" height="54" viewBox="0 0 110 78">
+      <svg width="128" height="82" viewBox="0 0 110 78">
         <path d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#152330" stroke-width="10" stroke-linecap="round"/>
         <path id="gauge-watertemp-arc" d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#06b6d4" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 141"/>
-        <text id="gauge-watertemp-txt" x="55" y="58" text-anchor="middle" font-size="17" font-weight="700" fill="#06b6d4" font-family="'JetBrains Mono',monospace">--</text>
-        <text x="55" y="72" text-anchor="middle" font-size="8" fill="#7d93a8">°C</text>
+        <text id="gauge-watertemp-txt" x="55" y="58" text-anchor="middle" font-size="20" font-weight="700" fill="#06b6d4" font-family="'JetBrains Mono',monospace">--</text>
+        <text x="55" y="72" text-anchor="middle" font-size="9" fill="#7d93a8">°C</text>
       </svg>
     </div>
     <div class="gauge-unit" id="gauge-roomtemp-wrap" style="display:none;">
       <div class="gauge-unit-label" style="color:#f97316">Suhu Ruang</div>
-      <svg width="84" height="54" viewBox="0 0 110 78">
+      <svg width="128" height="82" viewBox="0 0 110 78">
         <path d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#152330" stroke-width="10" stroke-linecap="round"/>
         <path id="gauge-roomtemp-arc" d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#f97316" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 141"/>
-        <text id="gauge-roomtemp-txt" x="55" y="58" text-anchor="middle" font-size="17" font-weight="700" fill="#f97316" font-family="'JetBrains Mono',monospace">--</text>
-        <text x="55" y="72" text-anchor="middle" font-size="8" fill="#7d93a8">°C</text>
+        <text id="gauge-roomtemp-txt" x="55" y="58" text-anchor="middle" font-size="20" font-weight="700" fill="#f97316" font-family="'JetBrains Mono',monospace">--</text>
+        <text x="55" y="72" text-anchor="middle" font-size="9" fill="#7d93a8">°C</text>
       </svg>
     </div>
     <div class="gauge-unit" id="gauge-humidity-wrap" style="display:none;">
       <div class="gauge-unit-label" style="color:#8b5cf6">Kelembapan</div>
-      <svg width="84" height="54" viewBox="0 0 110 78">
+      <svg width="128" height="82" viewBox="0 0 110 78">
         <path d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#152330" stroke-width="10" stroke-linecap="round"/>
         <path id="gauge-humidity-arc" d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#8b5cf6" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 141"/>
-        <text id="gauge-humidity-txt" x="55" y="58" text-anchor="middle" font-size="17" font-weight="700" fill="#8b5cf6" font-family="'JetBrains Mono',monospace">--</text>
-        <text x="55" y="72" text-anchor="middle" font-size="8" fill="#7d93a8">%</text>
+        <text id="gauge-humidity-txt" x="55" y="58" text-anchor="middle" font-size="20" font-weight="700" fill="#8b5cf6" font-family="'JetBrains Mono',monospace">--</text>
+        <text x="55" y="72" text-anchor="middle" font-size="9" fill="#7d93a8">%</text>
       </svg>
     </div>
   </div>
 
-  <div class="dosing-pill" id="dosing-pill"><div class="dot"></div><span id="dosing-text">Status dosing tidak diketahui</span></div>
-
-  <div class="section-label">Tren Parameter</div>
-  <div class="dose-card-list" id="dose-card-list">
-    <div class="empty-note">Memuat data parameter…</div>
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchView('dashboard')" id="tab-btn-dashboard">Dashboard</button>
+    <button class="tab-btn" onclick="switchView('history')" id="tab-btn-history">Riwayat Water Test</button>
   </div>
 
-  <div class="section-label">Water Test Terakhir</div>
-  <div class="hist-list" id="watertest-list"><div class="empty-note">Memuat riwayat…</div></div>
+  <div id="view-dashboard">
+    <div class="dosing-pill" id="dosing-pill"><div class="dot"></div><span id="dosing-text">Status dosing tidak diketahui</span></div>
 
-  <div class="section-label">Aktivitas Dosing</div>
-  <div class="hist-list" id="dose-list"><div class="empty-note">Memuat riwayat…</div></div>
+    <div class="section-label">Tren Parameter</div>
+    <div class="dose-card-list" id="dose-card-list">
+      <div class="empty-note">Memuat data parameter…</div>
+    </div>
+
+    <div class="section-label">Aktivitas Dosing</div>
+    <div class="hist-list" id="dose-list"><div class="empty-note">Memuat riwayat…</div></div>
+  </div>
+
+  <div id="view-history" style="display:none;">
+    <div class="section-label">Riwayat Water Test</div>
+    <div class="hist-list" id="watertest-list"><div class="empty-note">Memuat riwayat…</div></div>
+  </div>
 
   <footer>
-    Data publik (read-only) dari Firebase Realtime Database · auto-refresh tiap 60 detik<br>
-    <a href="https://console.firebase.google.com" target="_blank">Dikelola lewat Firebase Console</a>
+    Sensor &amp; status live real-time (streaming) · jadwal &amp; riwayat refresh tiap 60 detik<br>
+    Data publik (read-only) dari Firebase Realtime Database · <a href="https://console.firebase.google.com" target="_blank">Dikelola lewat Firebase Console</a>
   </footer>
 
 </div>
@@ -250,6 +263,8 @@
 // terkunci, cuma ESP32 yg bawa Database Secret yg bisa nulis data.
 const FB_URL = 'https://atozqposaidon-default-rtdb.asia-southeast1.firebasedatabase.app';
 const STALE_AFTER_SEC = 150; // kalau live_status lebih tua dari ini, dianggap offline
+// Nama lengkap elemen — dose_log/dosing_config dari firmware nyimpen kode singkat
+const ELEM_LABEL = {alk:'Alkalinity', ca:'Calcium', mg:'Magnesium', kalk:'Kalkwasser', trace:'Trace Element', nopox:'NoPox'};
 const REFRESH_MS = 60000;
 
 let refreshTimer = null;
@@ -282,63 +297,94 @@ function setGaugeArc(id, val, min, max, decimals){
   txt.textContent = val.toFixed(decimals);
 }
 
-async function loadLiveStatus(){
-  const porthole = document.getElementById('porthole');
+function applyLiveStatus(d){
+  const statusBadge = document.getElementById('status-badge');
   const statusLabel = document.getElementById('status-label');
+  if(!d){
+    statusLabel.textContent = 'Belum ada data';
+    document.getElementById('last-seen').textContent = 'ESP32 belum pernah kirim data live-status.';
+    return;
+  }
+  const ageSec = Math.floor(Date.now()/1000) - (d.updated_at||0);
+  const isOnline = d.updated_at && ageSec < STALE_AFTER_SEC;
+
+  statusBadge.classList.toggle('online', isOnline);
+  statusBadge.classList.toggle('offline', !isOnline);
+  statusLabel.textContent = isOnline ? 'Online' : 'Offline';
+  document.getElementById('last-seen').innerHTML = 'Update terakhir <b>' + fmtRelative(d.updated_at) + '</b>';
+
+  // Gauge suhu air — rentang 20-32°C, sama persis kayak gauge-water-arc di dashboard utama
+  setGaugeArc('watertemp', d.temp, 20, 32, 1);
+
+  // Gauge suhu ruang & kelembapan — cuma muncul kalau DHT22 aktif (room_live)
+  const roomTempWrap = document.getElementById('gauge-roomtemp-wrap');
+  const humWrap = document.getElementById('gauge-humidity-wrap');
+  if(d.room_live){
+    if(roomTempWrap) roomTempWrap.style.display = '';
+    if(humWrap) humWrap.style.display = '';
+    setGaugeArc('roomtemp', d.room_temp, 20, 40, 1);
+    setGaugeArc('humidity', d.room_hum, 0, 100, 0);
+  } else {
+    if(roomTempWrap) roomTempWrap.style.display = 'none';
+    if(humWrap) humWrap.style.display = 'none';
+  }
+
+  // FIX item#5: mirroring status dosing kayak di dashboard lokal — tampilin CHANNEL MANA
+  // yg lagi aktif (bukan cuma ya/tidak gabungan), pakai dosing_ch[] (4 bool) dari firmware.
+  const pill = document.getElementById('dosing-pill');
+  const chArr = d.dosing_ch || [false,false,false,false];
+  const activeChs = chArr.map((on,i)=>on?i:-1).filter(i=>i>=0);
+  const active = activeChs.length>0;
+  pill.classList.toggle('active', active);
+  let label = 'Tidak ada dosing aktif';
+  if(active && dosingConfig){
+    label = activeChs.map(i=>{
+      const cfg = dosingConfig['ch'+(i+1)];
+      const elemLabel = cfg ? (ELEM_LABEL[cfg.element]||cfg.element) : '?';
+      return `Pump ${i+1} ${elemLabel}`;
+    }).join(' · ') + ' sedang dosing…';
+  } else if(active){
+    label = 'Dosing sedang berjalan';
+  }
+  document.getElementById('dosing-text').textContent = label;
+}
+
+async function loadLiveStatus(){
   try{
     const res = await fetch(FB_URL + '/live_status.json');
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const d = await res.json();
-    if(!d){
-      statusLabel.textContent = 'Belum ada data';
-      document.getElementById('last-seen').textContent = 'ESP32 belum pernah kirim data live-status.';
-      return;
-    }
-    const ageSec = Math.floor(Date.now()/1000) - (d.updated_at||0);
-    const isOnline = d.updated_at && ageSec < STALE_AFTER_SEC;
-
-    porthole.classList.toggle('online', isOnline);
-    porthole.classList.toggle('offline', !isOnline);
-    statusLabel.textContent = isOnline ? 'Online' : 'Mungkin Offline';
-    document.getElementById('last-seen').innerHTML = 'Update terakhir <b>' + fmtRelative(d.updated_at) + '</b>';
-
-    // FIX: badge sumber data — suhu/pH bisa dari sensor LIVE (DS18B20/pH probe) atau
-    // dari water test terakhir kalau sensornya gak aktif/gagal baca. Ditampilin biar
-    // jelas, bukan ditebak.
-    const srcParts = [];
-    srcParts.push(d.temp_live ? 'suhu: sensor live' : 'suhu: water test terakhir');
-    srcParts.push(d.ph_live ? 'pH: probe live' : 'pH: water test terakhir');
-    const srcTag = document.getElementById('source-tag');
-    if(srcTag) srcTag.innerHTML = srcParts.map(s=>{
-      const isStale = s.includes('water test');
-      return isStale ? `<span class="stale">${s}</span>` : s;
-    }).join(' · ');
-
-    // Gauge suhu air — rentang 20-32°C, sama persis kayak gauge-water-arc di dashboard utama
-    setGaugeArc('watertemp', d.temp, 20, 32, 1);
-
-    // Gauge suhu ruang & kelembapan — cuma muncul kalau DHT22 aktif (room_live)
-    const roomTempWrap = document.getElementById('gauge-roomtemp-wrap');
-    const humWrap = document.getElementById('gauge-humidity-wrap');
-    if(d.room_live){
-      if(roomTempWrap) roomTempWrap.style.display = '';
-      if(humWrap) humWrap.style.display = '';
-      setGaugeArc('roomtemp', d.room_temp, 20, 40, 1);
-      setGaugeArc('humidity', d.room_hum, 0, 100, 0);
-    } else {
-      if(roomTempWrap) roomTempWrap.style.display = 'none';
-      if(humWrap) humWrap.style.display = 'none';
-    }
-
-    const pill = document.getElementById('dosing-pill');
-    const active = !!d.dosing_active;
-    pill.classList.toggle('active', active);
-    document.getElementById('dosing-text').textContent = active ? 'Dosing sedang berjalan' : 'Tidak ada dosing aktif';
-
+    applyLiveStatus(d);
   } catch(e){
-    statusLabel.textContent = 'Gagal memuat';
+    document.getElementById('status-label').textContent = 'Gagal memuat';
     document.getElementById('last-seen').innerHTML = '<span style="color:var(--coral)">Error: ' + e.message + '</span>';
   }
+}
+
+// FIX item#8: real-time streaming, bukan nunggu polling 60 detik. Firebase Realtime
+// Database REST API native support Server-Sent Events (SSE) — browser bisa langsung
+// dapet event begitu device push data baru, tanpa request berulang tiap interval.
+// EventSource otomatis kirim header "Accept: text/event-stream" dan otomatis
+// reconnect sendiri kalau koneksi putus (built-in browser behavior, gak perlu kode
+// retry manual). Tetap pertahankan loadLiveStatus()+refreshAll() periodik sbg
+// fallback/resync — kalau SSE kebetulan miss satu event, polling berikutnya nutup gap-nya.
+let liveStream = null;
+function connectLiveStream(){
+  if(!window.EventSource){ console.warn('[SSE] Browser gak support EventSource, pakai polling aja.'); return; }
+  if(liveStream) liveStream.close();
+  liveStream = new EventSource(FB_URL + '/live_status.json');
+  liveStream.addEventListener('put', (e)=>{
+    try{
+      const payload = JSON.parse(e.data);
+      // firmware selalu PUT (overwrite) seluruh node /live_status, jadi path-nya "/"
+      if(payload.path === '/' && payload.data){
+        applyLiveStatus(payload.data);
+      }
+    } catch(err){ console.warn('[SSE] parse error', err); }
+  });
+  liveStream.onerror = ()=>{
+    console.warn('[SSE] koneksi terputus, browser reconnect otomatis…');
+  };
 }
 
 let dosingConfig = null;
@@ -454,7 +500,12 @@ function renderDoseCards(rows){
       const daysLeft = dailyMl>0 ? Math.round(remain/dailyMl) : null;
       const fillColor = pct<15 ? 'var(--coral)' : pct<35 ? 'var(--amber)' : sp.color;
       const schedHtml = (ch.slots||[]).map(s=>{
-        const isPast = s.st===2 || s.st===5 || s.st===3; // 2=done,5=skipped,3=missed
+        // FIX: status dari firmware aja gak cukup — firmware cuma nandain MISSED dlm jendela
+        // sempit (5-6 menit stlh jadwal), jadi slot yg jamnya udah lewat SBLM jadwal baru
+        // disimpan/dimuat (mis. abis ganti mode) gak pernah ketangkep. Tambahin cek jam
+        // langsung: kalau jam slot < jam sekarang HARI INI, anggap "lewat" jg scr visual.
+        const nowMin = new Date().getHours()*60+new Date().getMinutes();
+        const isPast = s.st===2 || s.st===5 || s.st===3 || (s.h*60+s.m) < nowMin; // 2=done,5=skipped,3=missed
         const t = String(s.h).padStart(2,'0')+':'+String(s.m).padStart(2,'0');
         return `<span class="sched-time${isPast?' past':''}">${t}</span>`;
       }).join('');
@@ -470,7 +521,7 @@ function renderDoseCards(rows){
     return `
       <div class="dose-card">
         <div class="dose-card-head">
-          <div class="dose-name">${sp.icon} ${sp.label}${ch?` <span class="pump-tag">— P${ch.pump}</span>`:''}</div>
+          <div class="dose-name">${sp.icon} ${sp.label}${ch?` <span class="pump-tag">— Pump ${ch.pump}</span>`:''}</div>
           ${badgeTxt ? `<div class="dose-badge ${badgeCls}">${badgeTxt}</div>` : ''}
         </div>
         <div class="dose-value-row"><span class="dv-num">${last!==null?last.toFixed(sp.dec):'--'}</span><span class="dv-unit">${sp.unit}</span></div>
@@ -491,10 +542,12 @@ async function loadDoseLog(){
     const rows = Object.values(d).sort((a,b)=> (b.date+b.time).localeCompare(a.date+a.time));
     box.innerHTML = rows.map(r => {
       const badgeClass = r.status==='SKIPPED' ? 'skip' : r.status==='MISSED' ? 'miss' : '';
+      const elemLabel = ELEM_LABEL[r.element] || r.element || '-';
+      const reasonHtml = (r.status!=='DONE' && r.reason) ? `<div class="h-reason">${r.reason}</div>` : '';
       return `
       <div class="hist-row">
         <div class="h-date">${shortDate(r.date)} ${r.time? r.time.slice(0,5):''}</div>
-        <div class="h-mid">Ch${r.channel||'?'} · <b>${r.element||'-'}</b></div>
+        <div class="h-mid">Ch${r.channel||'?'} · <b>${elemLabel}</b>${reasonHtml}</div>
         <div class="badge ${badgeClass}">${r.status==='DONE' ? num(r.ml)+'ml' : (r.status||'-')}</div>
       </div>`;
     }).join('');
@@ -519,8 +572,17 @@ function manualRefresh(){
   refreshAll().finally(()=> setTimeout(()=>btn.classList.remove('spinning'), 500));
 }
 
+// Item #6: Water Test Terakhir dipindah ke view terpisah (toggle, bukan file kedua)
+function switchView(view){
+  document.getElementById('view-dashboard').style.display = view==='dashboard' ? '' : 'none';
+  document.getElementById('view-history').style.display = view==='history' ? '' : 'none';
+  document.getElementById('tab-btn-dashboard').classList.toggle('active', view==='dashboard');
+  document.getElementById('tab-btn-history').classList.toggle('active', view==='history');
+}
+
 refreshAll();
-refreshTimer = setInterval(refreshAll, REFRESH_MS);
+connectLiveStream(); // FIX item#8: live_status real-time via SSE, gak nunggu interval
+refreshTimer = setInterval(refreshAll, REFRESH_MS); // fallback/resync + refresh config & history
 </script>
 </body>
 </html>
