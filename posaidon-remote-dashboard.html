@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Posaidon — Remote Watch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --abyss:#070d14;
+    --surface:#0e1924;
+    --surface-2:#13212f;
+    --line:#1f3142;
+    --teal:#2dd4bf;
+    --teal-dim:#2dd4bf33;
+    --coral:#fb7185;
+    --amber:#f5b350;
+    --text:#e8f1f5;
+    --text-dim:#7d93a8;
+    --text-faint:#4a6072;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+    --font-body:'Inter',sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 1200px 600px at 50% -10%, #112436 0%, transparent 60%),
+      var(--abyss);
+    color:var(--text);
+    font-family:var(--font-body);
+    min-height:100vh;
+    padding:24px 16px 60px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:640px; margin:0 auto;}
+
+  /* ── HEADER ── */
+  header{display:flex; align-items:center; justify-content:space-between; margin-bottom:28px;}
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-mark{font-size:1.4rem;}
+  .brand-text{font-family:var(--font-display); font-weight:600; font-size:1.05rem; letter-spacing:0.01em;}
+  .brand-text span{color:var(--text-dim); font-weight:400; font-size:0.8rem; display:block; margin-top:-2px;}
+  #refresh-btn{
+    background:var(--surface-2); border:1px solid var(--line); color:var(--text-dim);
+    width:38px; height:38px; border-radius:10px; cursor:pointer; font-size:1rem;
+    display:flex; align-items:center; justify-content:center; transition:transform .4s ease, color .2s ease;
+  }
+  #refresh-btn:active{transform:rotate(180deg); color:var(--teal);}
+  #refresh-btn.spinning{animation:spin 0.8s linear infinite;}
+  @keyframes spin{ to{transform:rotate(360deg);} }
+
+  /* ── PORTHOLE HERO (signature element) ── */
+  .porthole-stage{ display:flex; justify-content:center; margin-bottom:8px; }
+  .porthole{
+    position:relative; width:248px; height:248px; border-radius:50%;
+    background:radial-gradient(circle at 38% 32%, #1a3344 0%, #0a141d 72%, #060c12 100%);
+    border:10px solid var(--surface-2);
+    box-shadow: 0 0 0 2px var(--line), inset 0 0 40px #000a, 0 24px 50px -20px #000c;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    overflow:hidden;
+  }
+  .porthole::before{ /* glowing ring that pulses when data is fresh */
+    content:''; position:absolute; inset:-2px; border-radius:50%;
+    border:2px solid var(--teal); opacity:0; pointer-events:none;
+  }
+  .porthole.online::before{ opacity:.55; animation:pulse-ring 2.6s ease-in-out infinite; }
+  .porthole.offline::before{ border-color:var(--coral); opacity:.5; animation:none; }
+  @keyframes pulse-ring{
+    0%,100%{ box-shadow:0 0 0 0 var(--teal-dim); }
+    50%{ box-shadow:0 0 0 10px transparent; }
+  }
+  .porthole .status-dot{
+    width:7px; height:7px; border-radius:50%; background:var(--text-faint); margin-bottom:6px;
+  }
+  .porthole.online .status-dot{ background:var(--teal); box-shadow:0 0 8px var(--teal); }
+  .porthole.offline .status-dot{ background:var(--coral); box-shadow:0 0 8px var(--coral); }
+  .porthole .status-label{
+    font-size:0.66rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-dim); margin-bottom:14px;
+  }
+  .porthole .temp-readout{ font-family:var(--font-mono); font-weight:600; font-size:2.5rem; line-height:1; color:var(--text); }
+  .porthole .temp-readout sup{ font-size:1.1rem; color:var(--text-dim); font-weight:500; }
+  .porthole .ph-readout{ font-family:var(--font-mono); font-size:0.95rem; color:var(--teal); margin-top:8px; letter-spacing:0.02em; }
+  .last-seen{ text-align:center; font-size:0.74rem; color:var(--text-faint); margin:14px 0 30px; }
+  .last-seen b{ color:var(--text-dim); font-weight:500; }
+
+  /* ── PARAM GRID ── */
+  .section-label{
+    font-family:var(--font-display); font-size:0.72rem; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--text-faint); margin:30px 0 12px; display:flex; align-items:center; gap:8px;
+  }
+  .section-label::after{ content:''; flex:1; height:1px; background:var(--line); }
+
+  .param-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .param-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px 10px;
+    text-align:center;
+  }
+  .param-card .p-label{ font-size:0.68rem; color:var(--text-dim); letter-spacing:0.04em; margin-bottom:6px; }
+  .param-card .p-value{ font-family:var(--font-mono); font-weight:600; font-size:1.32rem; color:var(--text); }
+  .param-card .p-unit{ font-size:0.62rem; color:var(--text-faint); margin-top:2px; }
+  .param-card.warn .p-value{ color:var(--amber); }
+  .param-card.alert .p-value{ color:var(--coral); }
+
+  .dosing-pill{
+    margin-top:14px; display:flex; align-items:center; justify-content:center; gap:8px;
+    background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:9px 16px;
+    font-size:0.78rem; color:var(--text-dim);
+  }
+  .dosing-pill .dot{ width:6px; height:6px; border-radius:50%; background:var(--text-faint); }
+  .dosing-pill.active .dot{ background:var(--teal); box-shadow:0 0 6px var(--teal); animation:blink 1.4s ease-in-out infinite; }
+  .dosing-pill.active{ color:var(--teal); border-color:var(--teal-dim); }
+  @keyframes blink{ 50%{ opacity:.35; } }
+
+  /* ── HISTORY LIST ── */
+  .hist-list{ display:flex; flex-direction:column; gap:1px; background:var(--line); border-radius:14px; overflow:hidden; border:1px solid var(--line); }
+  .hist-row{
+    background:var(--surface); padding:11px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .hist-row .h-date{ font-size:0.72rem; color:var(--text-faint); min-width:78px; }
+  .hist-row .h-mid{ flex:1; font-size:0.78rem; color:var(--text-dim); }
+  .hist-row .h-mid b{ color:var(--text); font-weight:500; }
+  .hist-row .h-values{ font-family:var(--font-mono); font-size:0.72rem; color:var(--text-dim); text-align:right; }
+  .hist-row .badge{
+    font-size:0.64rem; padding:3px 8px; border-radius:999px; font-family:var(--font-mono);
+    background:var(--teal-dim); color:var(--teal); white-space:nowrap;
+  }
+  .hist-row .badge.skip{ background:#f5b35022; color:var(--amber); }
+  .hist-row .badge.miss{ background:#fb718522; color:var(--coral); }
+
+  .empty-note, .err-note{
+    text-align:center; font-size:0.78rem; color:var(--text-faint); padding:26px 10px;
+    background:var(--surface); border:1px dashed var(--line); border-radius:14px;
+  }
+  .err-note{ color:var(--coral); }
+
+  footer{ text-align:center; margin-top:40px; font-size:0.68rem; color:var(--text-faint); letter-spacing:0.03em; }
+  footer a{ color:var(--text-dim); }
+
+  @media (max-width:380px){
+    .porthole{ width:212px; height:212px; }
+    .porthole .temp-readout{ font-size:2.1rem; }
+    .param-grid{ gap:8px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .porthole.online::before, .dosing-pill.active .dot, #refresh-btn.spinning{ animation:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="brand-mark">🔱</div>
+      <div class="brand-text">Posaidon<span>Remote Watch</span></div>
+    </div>
+    <button id="refresh-btn" onclick="manualRefresh()" aria-label="Refresh">⟳</button>
+  </header>
+
+  <div class="porthole-stage">
+    <div class="porthole offline" id="porthole">
+      <div class="status-dot"></div>
+      <div class="status-label" id="status-label">Menghubungkan…</div>
+      <div class="temp-readout" id="temp-readout">--<sup>°C</sup></div>
+      <div class="ph-readout" id="ph-readout">pH --</div>
+    </div>
+  </div>
+  <div class="last-seen" id="last-seen">Memuat data terakhir…</div>
+
+  <div class="param-grid" id="param-grid">
+    <div class="param-card"><div class="p-label">Alkalinity</div><div class="p-value" id="v-alk">--</div><div class="p-unit">dKH</div></div>
+    <div class="param-card"><div class="p-label">Calcium</div><div class="p-value" id="v-ca">--</div><div class="p-unit">ppm</div></div>
+    <div class="param-card"><div class="p-label">Magnesium</div><div class="p-value" id="v-mg">--</div><div class="p-unit">ppm</div></div>
+  </div>
+  <div class="dosing-pill" id="dosing-pill"><div class="dot"></div><span id="dosing-text">Status dosing tidak diketahui</span></div>
+
+  <div class="section-label">Water Test Terakhir</div>
+  <div class="hist-list" id="watertest-list"><div class="empty-note">Memuat riwayat…</div></div>
+
+  <div class="section-label">Aktivitas Dosing</div>
+  <div class="hist-list" id="dose-list"><div class="empty-note">Memuat riwayat…</div></div>
+
+  <footer>
+    Data publik (read-only) dari Firebase Realtime Database · auto-refresh tiap 60 detik<br>
+    <a href="https://console.firebase.google.com" target="_blank">Dikelola lewat Firebase Console</a>
+  </footer>
+
+</div>
+
+<script>
+// ── KONFIGURASI ──────────────────────────────────────────────
+// URL database publik (read-only) milik tank Anda. Aman ditaruh di sini karena
+// rules Firebase di-set ".read": true — siapapun bisa BACA, tapi WRITE tetap
+// terkunci, cuma ESP32 yg bawa Database Secret yg bisa nulis data.
+const FB_URL = 'https://atozqposaidon-default-rtdb.asia-southeast1.firebasedatabase.app';
+const STALE_AFTER_SEC = 150; // kalau live_status lebih tua dari ini, dianggap offline
+const REFRESH_MS = 60000;
+
+let refreshTimer = null;
+
+function fmtRelative(unixSec){
+  if(!unixSec) return '—';
+  const diff = Math.floor(Date.now()/1000) - unixSec;
+  if(diff < 0) return 'baru saja';
+  if(diff < 60) return diff + ' detik lalu';
+  if(diff < 3600) return Math.floor(diff/60) + ' menit lalu';
+  if(diff < 86400) return Math.floor(diff/3600) + ' jam lalu';
+  return Math.floor(diff/86400) + ' hari lalu';
+}
+
+function paramClass(val, lo, hi, loWarn, hiWarn){
+  if(val < loWarn || val > hiWarn) return 'alert';
+  if(val < lo || val > hi) return 'warn';
+  return '';
+}
+
+async function loadLiveStatus(){
+  const porthole = document.getElementById('porthole');
+  const statusLabel = document.getElementById('status-label');
+  try{
+    const res = await fetch(FB_URL + '/live_status.json');
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const d = await res.json();
+    if(!d){
+      statusLabel.textContent = 'Belum ada data';
+      document.getElementById('last-seen').textContent = 'ESP32 belum pernah kirim data live-status.';
+      return;
+    }
+    const ageSec = Math.floor(Date.now()/1000) - (d.updated_at||0);
+    const isOnline = d.updated_at && ageSec < STALE_AFTER_SEC;
+
+    porthole.classList.toggle('online', isOnline);
+    porthole.classList.toggle('offline', !isOnline);
+    statusLabel.textContent = isOnline ? 'Online' : 'Mungkin Offline';
+
+    document.getElementById('temp-readout').innerHTML =
+      (d.temp!==undefined ? d.temp.toFixed(1) : '--') + '<sup>°C</sup>';
+    document.getElementById('ph-readout').textContent = 'pH ' + (d.ph!==undefined ? d.ph.toFixed(2) : '--');
+    document.getElementById('last-seen').innerHTML = 'Update terakhir <b>' + fmtRelative(d.updated_at) + '</b>';
+
+    // Param cards — pakai rentang referensi umum reef (bukan target spesifik Anda,
+    // cuma panduan kasar buat warna). Sesuaikan kalau target Anda beda jauh.
+    setParam('v-alk', d.alk, 1, 'dKH', 7, 12, 6, 13);
+    setParam('v-ca', d.ca, 0, 'ppm', 380, 450, 350, 480);
+    setParam('v-mg', d.mg, 0, 'ppm', 1250, 1350, 1150, 1450);
+
+    const pill = document.getElementById('dosing-pill');
+    const active = !!d.dosing_active;
+    pill.classList.toggle('active', active);
+    document.getElementById('dosing-text').textContent = active ? 'Dosing sedang berjalan' : 'Tidak ada dosing aktif';
+
+  } catch(e){
+    statusLabel.textContent = 'Gagal memuat';
+    document.getElementById('last-seen').innerHTML = '<span style="color:var(--coral)">Error: ' + e.message + '</span>';
+  }
+}
+
+function setParam(id, val, decimals, unit, lo, hi, loWarn, hiWarn){
+  const el = document.getElementById(id);
+  const card = el.closest('.param-card');
+  card.classList.remove('warn','alert');
+  if(val===undefined || val===null){ el.textContent = '--'; return; }
+  el.textContent = decimals>0 ? val.toFixed(decimals) : Math.round(val);
+  const cls = paramClass(val, lo, hi, loWarn, hiWarn);
+  if(cls) card.classList.add(cls);
+}
+
+async function loadWaterTests(){
+  const box = document.getElementById('watertest-list');
+  try{
+    const res = await fetch(FB_URL + '/water_tests.json?orderBy="$key"&limitToLast=8');
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const d = await res.json();
+    if(!d){ box.innerHTML = '<div class="empty-note">Belum ada water test tersimpan.</div>'; return; }
+    const rows = Object.values(d).sort((a,b)=> (b.date+b.time).localeCompare(a.date+a.time));
+    box.innerHTML = rows.map(r => `
+      <div class="hist-row">
+        <div class="h-date">${r.date||'--'}</div>
+        <div class="h-mid">pH <b>${num(r.ph)}</b> · Alk <b>${num(r.alk)}</b></div>
+        <div class="h-values">Ca ${num(r.ca)} · Mg ${num(r.mg)}</div>
+      </div>`).join('');
+  } catch(e){
+    box.innerHTML = '<div class="err-note">Gagal memuat riwayat water test.</div>';
+  }
+}
+
+async function loadDoseLog(){
+  const box = document.getElementById('dose-list');
+  try{
+    const res = await fetch(FB_URL + '/dose_log.json?orderBy="$key"&limitToLast=10');
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const d = await res.json();
+    if(!d){ box.innerHTML = '<div class="empty-note">Belum ada aktivitas dosing tersimpan.</div>'; return; }
+    const rows = Object.values(d).sort((a,b)=> (b.date+b.time).localeCompare(a.date+a.time));
+    box.innerHTML = rows.map(r => {
+      const badgeClass = r.status==='SKIPPED' ? 'skip' : r.status==='MISSED' ? 'miss' : '';
+      return `
+      <div class="hist-row">
+        <div class="h-date">${shortDate(r.date)} ${r.time? r.time.slice(0,5):''}</div>
+        <div class="h-mid">Ch${r.channel||'?'} · <b>${r.element||'-'}</b></div>
+        <div class="badge ${badgeClass}">${r.status==='DONE' ? num(r.ml)+'ml' : (r.status||'-')}</div>
+      </div>`;
+    }).join('');
+  } catch(e){
+    box.innerHTML = '<div class="err-note">Gagal memuat riwayat dosing.</div>';
+  }
+}
+
+function num(v){ return (v===undefined||v===null) ? '--' : (typeof v==='number' ? (Number.isInteger(v)?v:v.toFixed(1)) : v); }
+function shortDate(d){ if(!d) return '--'; const p=d.split('-'); return p.length===3 ? p[2]+'/'+p[1] : d; }
+
+async function refreshAll(){
+  await Promise.all([loadLiveStatus(), loadWaterTests(), loadDoseLog()]);
+}
+
+function manualRefresh(){
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+  refreshAll().finally(()=> setTimeout(()=>btn.classList.remove('spinning'), 500));
+}
+
+refreshAll();
+refreshTimer = setInterval(refreshAll, REFRESH_MS);
+</script>
+</body>
+</html>
