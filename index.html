@@ -52,13 +52,13 @@
   #refresh-btn.spinning{animation:spin 0.8s linear infinite;}
   @keyframes spin{ to{transform:rotate(360deg);} }
 
-  /* ── PORTHOLE HERO (signature element) ── */
-  .porthole-stage{ display:flex; justify-content:center; margin-bottom:8px; }
+  /* ── PORTHOLE HERO (signature element — status ring) ── */
+  .porthole-stage{ display:flex; justify-content:center; margin-bottom:4px; }
   .porthole{
-    position:relative; width:248px; height:248px; border-radius:50%;
+    position:relative; width:152px; height:152px; border-radius:50%;
     background:radial-gradient(circle at 38% 32%, #1a3344 0%, #0a141d 72%, #060c12 100%);
-    border:10px solid var(--surface-2);
-    box-shadow: 0 0 0 2px var(--line), inset 0 0 40px #000a, 0 24px 50px -20px #000c;
+    border:8px solid var(--surface-2);
+    box-shadow: 0 0 0 2px var(--line), inset 0 0 30px #000a, 0 18px 36px -16px #000c;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     overflow:hidden;
   }
@@ -78,41 +78,29 @@
   .porthole.online .status-dot{ background:var(--teal); box-shadow:0 0 8px var(--teal); }
   .porthole.offline .status-dot{ background:var(--coral); box-shadow:0 0 8px var(--coral); }
   .porthole .status-label{
-    font-size:0.66rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-dim); margin-bottom:14px;
+    font-size:0.7rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-dim);
   }
-  .porthole .temp-readout{ font-family:var(--font-mono); font-weight:600; font-size:2.5rem; line-height:1; color:var(--text); }
-  .porthole .temp-readout sup{ font-size:1.1rem; color:var(--text-dim); font-weight:500; }
-  .porthole .ph-readout{ font-family:var(--font-mono); font-size:0.95rem; color:var(--teal); margin-top:8px; letter-spacing:0.02em; }
-  .porthole .source-tag{ font-size:0.62rem; color:var(--text-faint); margin-top:10px; letter-spacing:0.02em; }
-  .porthole .source-tag .stale{ color:var(--amber); }
-  .last-seen{ text-align:center; font-size:0.74rem; color:var(--text-faint); margin:14px 0 12px; }
-  .room-row{
-    display:flex; justify-content:center; gap:18px; margin-bottom:18px;
-    font-size:0.72rem; color:var(--text-dim);
-  }
-  .room-row b{ color:var(--text); font-family:var(--font-mono); font-weight:500; }
+  .last-seen{ text-align:center; font-size:0.74rem; color:var(--text-faint); margin:16px 0 4px; }
+  .source-tag{ text-align:center; font-size:0.66rem; color:var(--text-faint); margin-bottom:6px; letter-spacing:0.01em; }
+  .source-tag .stale{ color:var(--amber); }
   .last-seen b{ color:var(--text-dim); font-weight:500; }
 
-  /* ── PARAM GRID ── */
   .section-label{
     font-family:var(--font-display); font-size:0.72rem; letter-spacing:0.14em; text-transform:uppercase;
-    color:var(--text-faint); margin:30px 0 12px; display:flex; align-items:center; gap:8px;
+    color:var(--text-faint); margin:26px 0 12px; display:flex; align-items:center; gap:8px;
   }
   .section-label::after{ content:''; flex:1; height:1px; background:var(--line); }
 
-  .param-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
-  .param-card{
-    background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px 10px;
-    text-align:center;
+  /* ── SENSOR GAUGES (suhu air/ruang, kelembapan) ── */
+  .sensor-gauge-row{ display:flex; justify-content:center; gap:8px; flex-wrap:wrap; }
+  .gauge-unit{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:10px 6px 6px; text-align:center; flex:1; min-width:96px; max-width:140px;
   }
-  .param-card .p-label{ font-size:0.68rem; color:var(--text-dim); letter-spacing:0.04em; margin-bottom:6px; }
-  .param-card .p-value{ font-family:var(--font-mono); font-weight:600; font-size:1.32rem; color:var(--text); }
-  .param-card .p-unit{ font-size:0.62rem; color:var(--text-faint); margin-top:2px; }
-  .param-card.warn .p-value{ color:var(--amber); }
-  .param-card.alert .p-value{ color:var(--coral); }
+  .gauge-unit-label{ font-size:0.64rem; margin-bottom:2px; letter-spacing:0.02em; }
 
   .dosing-pill{
-    margin-top:14px; display:flex; align-items:center; justify-content:center; gap:8px;
+    margin-top:16px; display:flex; align-items:center; justify-content:center; gap:8px;
     background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:9px 16px;
     font-size:0.78rem; color:var(--text-dim);
   }
@@ -121,14 +109,13 @@
   .dosing-pill.active{ color:var(--teal); border-color:var(--teal-dim); }
   @keyframes blink{ 50%{ opacity:.35; } }
 
-  /* ── HISTORY LIST ── */
-  /* ── TREND CHARTS ── */
+  /* ── TREND CHARTS (gauge + line chart per param, gaya sama kayak dashboard utama) ── */
   .chart-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .chart-card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:12px 12px 8px; }
-  .chart-card-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
-  .chart-card-head span{ font-size:0.72rem; color:var(--text-dim); }
-  .chart-card-head b{ font-family:var(--font-mono); font-size:0.92rem; color:var(--teal); font-weight:600; }
-  .chart-box{ position:relative; height:110px; }
+  .chart-card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:10px 10px 8px; text-align:center; }
+  .chart-card-head{ margin-bottom:2px; }
+  .chart-card-head span{ font-size:0.7rem; color:var(--text-dim); }
+  .card-gauge{ display:block; margin:0 auto; }
+  .chart-box{ position:relative; height:96px; margin-top:2px; }
 
   .hist-list{ display:flex; flex-direction:column; gap:1px; background:var(--line); border-radius:14px; overflow:hidden; border:1px solid var(--line); }
   .hist-row{
@@ -155,10 +142,9 @@
   footer a{ color:var(--text-dim); }
 
   @media (max-width:380px){
-    .porthole{ width:212px; height:212px; }
-    .porthole .temp-readout{ font-size:2.1rem; }
-    .param-grid{ gap:8px; }
-    .chart-box{ height:92px; }
+    .porthole{ width:128px; height:128px; }
+    .gauge-unit{ min-width:84px; padding:8px 4px 4px; }
+    .chart-box{ height:84px; }
   }
   @media (prefers-reduced-motion: reduce){
     .porthole.online::before, .dosing-pill.active .dot, #refresh-btn.spinning{ animation:none !important; }
@@ -180,28 +166,88 @@
     <div class="porthole offline" id="porthole">
       <div class="status-dot"></div>
       <div class="status-label" id="status-label">Menghubungkan…</div>
-      <div class="temp-readout" id="temp-readout">--<sup>°C</sup></div>
-      <div class="ph-readout" id="ph-readout">pH --</div>
-      <div class="source-tag" id="source-tag"></div>
     </div>
   </div>
   <div class="last-seen" id="last-seen">Memuat data terakhir…</div>
-  <div class="room-row" id="room-row" style="display:none;"></div>
+  <div class="source-tag" id="source-tag"></div>
 
-  <div class="param-grid" id="param-grid">
-    <div class="param-card"><div class="p-label">Alkalinity</div><div class="p-value" id="v-alk">--</div><div class="p-unit">dKH</div></div>
-    <div class="param-card"><div class="p-label">Calcium</div><div class="p-value" id="v-ca">--</div><div class="p-unit">ppm</div></div>
-    <div class="param-card"><div class="p-label">Magnesium</div><div class="p-value" id="v-mg">--</div><div class="p-unit">ppm</div></div>
+  <div class="section-label">Kondisi Sensor</div>
+  <div class="sensor-gauge-row" id="sensor-gauge-row">
+    <div class="gauge-unit">
+      <div class="gauge-unit-label" style="color:#06b6d4">Suhu Air</div>
+      <svg width="84" height="54" viewBox="0 0 110 78">
+        <path d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#152330" stroke-width="10" stroke-linecap="round"/>
+        <path id="gauge-watertemp-arc" d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#06b6d4" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 141"/>
+        <text id="gauge-watertemp-txt" x="55" y="58" text-anchor="middle" font-size="17" font-weight="700" fill="#06b6d4" font-family="'JetBrains Mono',monospace">--</text>
+        <text x="55" y="72" text-anchor="middle" font-size="8" fill="#7d93a8">°C</text>
+      </svg>
+    </div>
+    <div class="gauge-unit" id="gauge-roomtemp-wrap" style="display:none;">
+      <div class="gauge-unit-label" style="color:#f97316">Suhu Ruang</div>
+      <svg width="84" height="54" viewBox="0 0 110 78">
+        <path d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#152330" stroke-width="10" stroke-linecap="round"/>
+        <path id="gauge-roomtemp-arc" d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#f97316" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 141"/>
+        <text id="gauge-roomtemp-txt" x="55" y="58" text-anchor="middle" font-size="17" font-weight="700" fill="#f97316" font-family="'JetBrains Mono',monospace">--</text>
+        <text x="55" y="72" text-anchor="middle" font-size="8" fill="#7d93a8">°C</text>
+      </svg>
+    </div>
+    <div class="gauge-unit" id="gauge-humidity-wrap" style="display:none;">
+      <div class="gauge-unit-label" style="color:#8b5cf6">Kelembapan</div>
+      <svg width="84" height="54" viewBox="0 0 110 78">
+        <path d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#152330" stroke-width="10" stroke-linecap="round"/>
+        <path id="gauge-humidity-arc" d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#8b5cf6" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 141"/>
+        <text id="gauge-humidity-txt" x="55" y="58" text-anchor="middle" font-size="17" font-weight="700" fill="#8b5cf6" font-family="'JetBrains Mono',monospace">--</text>
+        <text x="55" y="72" text-anchor="middle" font-size="8" fill="#7d93a8">%</text>
+      </svg>
+    </div>
   </div>
+
   <div class="dosing-pill" id="dosing-pill"><div class="dot"></div><span id="dosing-text">Status dosing tidak diketahui</span></div>
 
   <div class="section-label">Tren Parameter</div>
   <div class="chart-grid" id="chart-grid">
-    <div class="chart-card"><div class="chart-card-head"><span>Alkalinity</span><b id="chart-now-alk">--</b></div><div class="chart-box"><canvas id="chart-alk"></canvas></div></div>
-    <div class="chart-card"><div class="chart-card-head"><span>Calcium</span><b id="chart-now-ca">--</b></div><div class="chart-box"><canvas id="chart-ca"></canvas></div></div>
-    <div class="chart-card"><div class="chart-card-head"><span>Magnesium</span><b id="chart-now-mg">--</b></div><div class="chart-box"><canvas id="chart-mg"></canvas></div></div>
-    <div class="chart-card"><div class="chart-card-head"><span>pH</span><b id="chart-now-ph">--</b></div><div class="chart-box"><canvas id="chart-ph"></canvas></div></div>
+    <div class="chart-card">
+      <div class="chart-card-head"><span>Alkalinity</span></div>
+      <svg width="78" height="50" viewBox="0 0 110 78" class="card-gauge">
+        <path d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#152330" stroke-width="9" stroke-linecap="round"/>
+        <path id="gauge-alk-arc" d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#38bdf8" stroke-width="9" stroke-linecap="round" stroke-dasharray="0 141"/>
+        <text id="gauge-alk-txt" x="55" y="58" text-anchor="middle" font-size="15" font-weight="700" fill="#38bdf8" font-family="'JetBrains Mono',monospace">--</text>
+        <text x="55" y="72" text-anchor="middle" font-size="7" fill="#7d93a8">dKH</text>
+      </svg>
+      <div class="chart-box"><canvas id="chart-alk"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-head"><span>Calcium</span></div>
+      <svg width="78" height="50" viewBox="0 0 110 78" class="card-gauge">
+        <path d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#152330" stroke-width="9" stroke-linecap="round"/>
+        <path id="gauge-ca-arc" d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#10b981" stroke-width="9" stroke-linecap="round" stroke-dasharray="0 141"/>
+        <text id="gauge-ca-txt" x="55" y="58" text-anchor="middle" font-size="15" font-weight="700" fill="#10b981" font-family="'JetBrains Mono',monospace">--</text>
+        <text x="55" y="72" text-anchor="middle" font-size="7" fill="#7d93a8">ppm</text>
+      </svg>
+      <div class="chart-box"><canvas id="chart-ca"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-head"><span>Magnesium</span></div>
+      <svg width="78" height="50" viewBox="0 0 110 78" class="card-gauge">
+        <path d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#152330" stroke-width="9" stroke-linecap="round"/>
+        <path id="gauge-mg-arc" d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#f59e0b" stroke-width="9" stroke-linecap="round" stroke-dasharray="0 141"/>
+        <text id="gauge-mg-txt" x="55" y="58" text-anchor="middle" font-size="15" font-weight="700" fill="#f59e0b" font-family="'JetBrains Mono',monospace">--</text>
+        <text x="55" y="72" text-anchor="middle" font-size="7" fill="#7d93a8">ppm</text>
+      </svg>
+      <div class="chart-box"><canvas id="chart-mg"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-head"><span>pH</span></div>
+      <svg width="78" height="50" viewBox="0 0 110 78" class="card-gauge">
+        <path d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#152330" stroke-width="9" stroke-linecap="round"/>
+        <path id="gauge-ph-arc" d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#a78bfa" stroke-width="9" stroke-linecap="round" stroke-dasharray="0 141"/>
+        <text id="gauge-ph-txt" x="55" y="58" text-anchor="middle" font-size="15" font-weight="700" fill="#a78bfa" font-family="'JetBrains Mono',monospace">--</text>
+        <text x="55" y="72" text-anchor="middle" font-size="7" fill="#7d93a8">pH</text>
+      </svg>
+      <div class="chart-box"><canvas id="chart-ph"></canvas></div>
+    </div>
   </div>
+
 
   <div class="section-label">Water Test Terakhir</div>
   <div class="hist-list" id="watertest-list"><div class="empty-note">Memuat riwayat…</div></div>
@@ -237,10 +283,22 @@ function fmtRelative(unixSec){
   return Math.floor(diff/86400) + ' hari lalu';
 }
 
-function paramClass(val, lo, hi, loWarn, hiWarn){
-  if(val < loWarn || val > hiWarn) return 'alert';
-  if(val < lo || val > hi) return 'warn';
-  return '';
+// Gauge semicircle — pola PERSIS sama kayak setGaugeArc() di dashboard utama:
+// posisi arc dihitung dari (val-min)/(max-min), arc length total=141 (r=45 semicircle).
+function setGaugeArc(id, val, min, max, decimals){
+  const arc = document.getElementById('gauge-'+id+'-arc');
+  const txt = document.getElementById('gauge-'+id+'-txt');
+  if(!arc || !txt) return;
+  if(val===undefined || val===null || isNaN(val)){
+    arc.setAttribute('stroke-dasharray', '0 141');
+    txt.textContent = '--';
+    return;
+  }
+  const pct = Math.max(0, Math.min(1, (val-min)/(max-min)));
+  const total = 141;
+  const fill = Math.round(pct*total);
+  arc.setAttribute('stroke-dasharray', fill+' '+(total-fill));
+  txt.textContent = val.toFixed(decimals);
 }
 
 async function loadLiveStatus(){
@@ -261,10 +319,6 @@ async function loadLiveStatus(){
     porthole.classList.toggle('online', isOnline);
     porthole.classList.toggle('offline', !isOnline);
     statusLabel.textContent = isOnline ? 'Online' : 'Mungkin Offline';
-
-    document.getElementById('temp-readout').innerHTML =
-      (d.temp!==undefined ? d.temp.toFixed(1) : '--') + '<sup>°C</sup>';
-    document.getElementById('ph-readout').textContent = 'pH ' + (d.ph!==undefined ? d.ph.toFixed(2) : '--');
     document.getElementById('last-seen').innerHTML = 'Update terakhir <b>' + fmtRelative(d.updated_at) + '</b>';
 
     // FIX: badge sumber data — suhu/pH bisa dari sensor LIVE (DS18B20/pH probe) atau
@@ -279,22 +333,22 @@ async function loadLiveStatus(){
       return isStale ? `<span class="stale">${s}</span>` : s;
     }).join(' · ');
 
-    const roomRow = document.getElementById('room-row');
-    if(roomRow){
-      if(d.room_live){
-        roomRow.style.display = 'flex';
-        roomRow.innerHTML = `<span>Ruangan <b>${d.room_temp!==undefined?d.room_temp.toFixed(1):'--'}°C</b></span><span>Kelembapan <b>${d.room_hum!==undefined?d.room_hum.toFixed(0):'--'}%</b></span>`;
-      } else {
-        roomRow.style.display = 'none';
-      }
+    // Gauge suhu air — rentang 20-32°C, sama persis kayak gauge-water-arc di dashboard utama
+    setGaugeArc('watertemp', d.temp, 20, 32, 1);
+
+    // Gauge suhu ruang & kelembapan — cuma muncul kalau DHT22 aktif (room_live)
+    const roomTempWrap = document.getElementById('gauge-roomtemp-wrap');
+    const humWrap = document.getElementById('gauge-humidity-wrap');
+    if(d.room_live){
+      if(roomTempWrap) roomTempWrap.style.display = '';
+      if(humWrap) humWrap.style.display = '';
+      setGaugeArc('roomtemp', d.room_temp, 20, 40, 1);
+      setGaugeArc('humidity', d.room_hum, 0, 100, 0);
+    } else {
+      if(roomTempWrap) roomTempWrap.style.display = 'none';
+      if(humWrap) humWrap.style.display = 'none';
     }
 
-    // Param cards — kalau target Anda (dari Dosing Setup) udah kekirim ke Firebase,
-    // warna dihitung dari situ (target ± toleransi). Kalau channel itu belum diaktifkan
-    // di Dosing Setup (target=0), fallback ke rentang umum reef sbg panduan kasar.
-    setParamWithTarget('v-alk', d.alk, d.target_alk, 1, 'dKH', 0.6, 7, 12, 6, 13);
-    setParamWithTarget('v-ca',  d.ca,  d.target_ca,  0, 'ppm', 15,  380, 450, 350, 480);
-    setParamWithTarget('v-mg',  d.mg,  d.target_mg,  0, 'ppm', 30,  1250, 1350, 1150, 1450);
     fbTargets = { alk:d.target_alk||0, ca:d.target_ca||0, mg:d.target_mg||0 };
 
     const pill = document.getElementById('dosing-pill');
@@ -306,29 +360,6 @@ async function loadLiveStatus(){
     statusLabel.textContent = 'Gagal memuat';
     document.getElementById('last-seen').innerHTML = '<span style="color:var(--coral)">Error: ' + e.message + '</span>';
   }
-}
-
-// tol = toleransi "OK" di sekitar target (mis. Alk target±0.6dKH = ijo, ±1.2dKH = kuning, di luar itu = merah)
-function setParamWithTarget(id, val, target, decimals, unit, tol, fbLo, fbHi, fbLoWarn, fbHiWarn){
-  let lo, hi, loWarn, hiWarn;
-  if(target && target > 0){
-    lo = target - tol; hi = target + tol;
-    loWarn = target - tol*2; hiWarn = target + tol*2;
-  } else {
-    // Channel ini belum di-set di Dosing Setup — pakai rentang umum reef sbg panduan kasar
-    lo = fbLo; hi = fbHi; loWarn = fbLoWarn; hiWarn = fbHiWarn;
-  }
-  setParam(id, val, decimals, unit, lo, hi, loWarn, hiWarn);
-}
-
-function setParam(id, val, decimals, unit, lo, hi, loWarn, hiWarn){
-  const el = document.getElementById(id);
-  const card = el.closest('.param-card');
-  card.classList.remove('warn','alert');
-  if(val===undefined || val===null){ el.textContent = '--'; return; }
-  el.textContent = decimals>0 ? val.toFixed(decimals) : Math.round(val);
-  const cls = paramClass(val, lo, hi, loWarn, hiWarn);
-  if(cls) card.classList.add(cls);
 }
 
 let chartInstances = [];
@@ -375,13 +406,15 @@ function renderTrendCharts(rows){
     if(!rows.length) return;
 
     const labels = rows.map(r => shortDate(r.date));
-    // target_xxx dari live_status (kalau Anda udah set di Dosing Setup) jadi garis referensi;
-    // kalau belum ke-set (0), garis referensi gak ditampilkan sama sekali (drpd nebak2).
+    // Warna & rentang gauge (gaugeMin/gaugeMax) PERSIS sama kayak di dashboard utama,
+    // biar tampilannya konsisten antara device lokal & remote watch ini.
+    // target_xxx dari live_status (kalau Anda udah set di Dosing Setup) jadi garis
+    // referensi di CHART (beda dari rentang gauge — itu fix, ini ngikutin target Anda).
     const specs = [
-      { key:'alk', canvas:'chart-alk', now:'chart-now-alk', color:'#2dd4bf', dec:1, target:fbTargets.alk, tol:0.6 },
-      { key:'ca',  canvas:'chart-ca',  now:'chart-now-ca',  color:'#38bdf8', dec:0, target:fbTargets.ca,  tol:15  },
-      { key:'mg',  canvas:'chart-mg',  now:'chart-now-mg',  color:'#a78bfa', dec:0, target:fbTargets.mg,  tol:30  },
-      { key:'ph',  canvas:'chart-ph',  now:'chart-now-ph',  color:'#f5b350', dec:2, target:0,             tol:0   },
+      { key:'alk', canvas:'chart-alk', color:'#38bdf8', dec:1, gMin:5,    gMax:14,   target:fbTargets.alk, tol:0.6 },
+      { key:'ca',  canvas:'chart-ca',  color:'#10b981', dec:0, gMin:350,  gMax:500,  target:fbTargets.ca,  tol:15  },
+      { key:'mg',  canvas:'chart-mg',  color:'#f59e0b', dec:0, gMin:1100, gMax:1600, target:fbTargets.mg,  tol:30  },
+      { key:'ph',  canvas:'chart-ph',  color:'#a78bfa', dec:2, gMin:7.8,  gMax:8.6,  target:0,             tol:0   },
     ];
 
     specs.forEach(sp=>{
@@ -389,8 +422,7 @@ function renderTrendCharts(rows){
       if(!canvas) return;
       const vals = rows.map(r => (r[sp.key]!==undefined && r[sp.key]!==null) ? parseFloat(r[sp.key]) : null);
       const last = [...vals].reverse().find(v => v!==null);
-      const nowEl = document.getElementById(sp.now);
-      if(nowEl) nowEl.textContent = last!==undefined ? last.toFixed(sp.dec) : '--';
+      setGaugeArc(sp.key, last, sp.gMin, sp.gMax, sp.dec);
 
       const ptColors = vals.map(v=>{
         if(v===null || !sp.target) return sp.color;
