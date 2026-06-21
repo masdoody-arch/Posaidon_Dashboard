@@ -109,13 +109,34 @@
   .dosing-pill.active{ color:var(--teal); border-color:var(--teal-dim); }
   @keyframes blink{ 50%{ opacity:.35; } }
 
-  /* ── TREND CHARTS (gauge + line chart per param, gaya sama kayak dashboard utama) ── */
-  .chart-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .chart-card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:10px 10px 8px; text-align:center; }
-  .chart-card-head{ margin-bottom:2px; }
-  .chart-card-head span{ font-size:0.7rem; color:var(--text-dim); }
-  .card-gauge{ display:block; margin:0 auto; }
-  .chart-box{ position:relative; height:96px; margin-top:2px; }
+  /* ── DOSE CARDS (gaya sama kayak Dosing Setup di dashboard utama, minus kontrol) ── */
+  .dose-card-list{ display:flex; flex-direction:column; gap:10px; }
+  .dose-card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:13px 14px; }
+  .dose-card-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .dose-name{ font-size:0.8rem; font-weight:500; color:var(--text); }
+  .dose-name .pump-tag{ color:var(--text-faint); font-weight:400; font-size:0.72rem; }
+  .dose-badge{ font-size:0.64rem; padding:3px 9px; border-radius:999px; font-family:var(--font-mono); background:var(--teal-dim); color:var(--teal); white-space:nowrap; }
+  .dose-badge.low{ background:#f5b35022; color:var(--amber); }
+  .dose-badge.high{ background:#fb718522; color:var(--coral); }
+  .dose-value-row{ display:flex; align-items:baseline; gap:5px; margin-bottom:6px; }
+  .dose-value-row .dv-num{ font-family:var(--font-mono); font-weight:700; font-size:1.7rem; color:var(--text); }
+  .dose-value-row .dv-unit{ font-size:0.74rem; color:var(--text-dim); }
+  .dose-tip{ font-size:0.7rem; color:var(--text-dim); background:var(--surface-2); border-radius:8px; padding:6px 9px; margin-bottom:6px; line-height:1.4; }
+  .dose-rate{ font-size:0.72rem; color:var(--text-dim); margin-bottom:8px; font-family:var(--font-mono); }
+  .dose-spark-row{ display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .dose-spark-row svg{ flex-shrink:0; }
+  .dose-spark-meta{ font-size:0.66rem; color:var(--text-faint); text-align:right; flex:1; line-height:1.5; }
+  .dose-spark-meta b{ color:var(--text-dim); font-family:var(--font-mono); font-weight:500; }
+  .bottle-wrap{ margin-bottom:8px; }
+  .bottle-track{ height:6px; border-radius:99px; background:var(--surface-2); overflow:hidden; margin-bottom:4px; }
+  .bottle-fill{ height:100%; border-radius:99px; }
+  .bottle-label{ display:flex; justify-content:space-between; font-size:0.64rem; color:var(--text-faint); }
+  .bottle-label b{ color:var(--text-dim); font-family:var(--font-mono); font-weight:500; }
+  .dose-mode{ font-size:0.7rem; color:var(--text-faint); margin-bottom:4px; }
+  .dose-mode b{ color:var(--text-dim); font-weight:500; }
+  .dose-schedule{ font-size:0.68rem; color:var(--text-faint); line-height:1.6; }
+  .dose-schedule .sched-time{ font-family:var(--font-mono); color:var(--text-dim); margin-right:6px; }
+  .dose-schedule .sched-time.past{ color:var(--text-faint); text-decoration:line-through; opacity:0.6; }
 
   .hist-list{ display:flex; flex-direction:column; gap:1px; background:var(--line); border-radius:14px; overflow:hidden; border:1px solid var(--line); }
   .hist-row{
@@ -144,7 +165,7 @@
   @media (max-width:380px){
     .porthole{ width:128px; height:128px; }
     .gauge-unit{ min-width:84px; padding:8px 4px 4px; }
-    .chart-box{ height:84px; }
+    .dose-card{ padding:11px 12px; }
   }
   @media (prefers-reduced-motion: reduce){
     .porthole.online::before, .dosing-pill.active .dot, #refresh-btn.spinning{ animation:none !important; }
@@ -205,49 +226,9 @@
   <div class="dosing-pill" id="dosing-pill"><div class="dot"></div><span id="dosing-text">Status dosing tidak diketahui</span></div>
 
   <div class="section-label">Tren Parameter</div>
-  <div class="chart-grid" id="chart-grid">
-    <div class="chart-card">
-      <div class="chart-card-head"><span>Alkalinity</span></div>
-      <svg width="78" height="50" viewBox="0 0 110 78" class="card-gauge">
-        <path d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#152330" stroke-width="9" stroke-linecap="round"/>
-        <path id="gauge-alk-arc" d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#38bdf8" stroke-width="9" stroke-linecap="round" stroke-dasharray="0 141"/>
-        <text id="gauge-alk-txt" x="55" y="58" text-anchor="middle" font-size="15" font-weight="700" fill="#38bdf8" font-family="'JetBrains Mono',monospace">--</text>
-        <text x="55" y="72" text-anchor="middle" font-size="7" fill="#7d93a8">dKH</text>
-      </svg>
-      <div class="chart-box"><canvas id="chart-alk"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-card-head"><span>Calcium</span></div>
-      <svg width="78" height="50" viewBox="0 0 110 78" class="card-gauge">
-        <path d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#152330" stroke-width="9" stroke-linecap="round"/>
-        <path id="gauge-ca-arc" d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#10b981" stroke-width="9" stroke-linecap="round" stroke-dasharray="0 141"/>
-        <text id="gauge-ca-txt" x="55" y="58" text-anchor="middle" font-size="15" font-weight="700" fill="#10b981" font-family="'JetBrains Mono',monospace">--</text>
-        <text x="55" y="72" text-anchor="middle" font-size="7" fill="#7d93a8">ppm</text>
-      </svg>
-      <div class="chart-box"><canvas id="chart-ca"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-card-head"><span>Magnesium</span></div>
-      <svg width="78" height="50" viewBox="0 0 110 78" class="card-gauge">
-        <path d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#152330" stroke-width="9" stroke-linecap="round"/>
-        <path id="gauge-mg-arc" d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#f59e0b" stroke-width="9" stroke-linecap="round" stroke-dasharray="0 141"/>
-        <text id="gauge-mg-txt" x="55" y="58" text-anchor="middle" font-size="15" font-weight="700" fill="#f59e0b" font-family="'JetBrains Mono',monospace">--</text>
-        <text x="55" y="72" text-anchor="middle" font-size="7" fill="#7d93a8">ppm</text>
-      </svg>
-      <div class="chart-box"><canvas id="chart-mg"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-card-head"><span>pH</span></div>
-      <svg width="78" height="50" viewBox="0 0 110 78" class="card-gauge">
-        <path d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#152330" stroke-width="9" stroke-linecap="round"/>
-        <path id="gauge-ph-arc" d="M 10 65 A 45 45 0 0 1 100 65" fill="none" stroke="#a78bfa" stroke-width="9" stroke-linecap="round" stroke-dasharray="0 141"/>
-        <text id="gauge-ph-txt" x="55" y="58" text-anchor="middle" font-size="15" font-weight="700" fill="#a78bfa" font-family="'JetBrains Mono',monospace">--</text>
-        <text x="55" y="72" text-anchor="middle" font-size="7" fill="#7d93a8">pH</text>
-      </svg>
-      <div class="chart-box"><canvas id="chart-ph"></canvas></div>
-    </div>
+  <div class="dose-card-list" id="dose-card-list">
+    <div class="empty-note">Memuat data parameter…</div>
   </div>
-
 
   <div class="section-label">Water Test Terakhir</div>
   <div class="hist-list" id="watertest-list"><div class="empty-note">Memuat riwayat…</div></div>
@@ -349,8 +330,6 @@ async function loadLiveStatus(){
       if(humWrap) humWrap.style.display = 'none';
     }
 
-    fbTargets = { alk:d.target_alk||0, ca:d.target_ca||0, mg:d.target_mg||0 };
-
     const pill = document.getElementById('dosing-pill');
     const active = !!d.dosing_active;
     pill.classList.toggle('active', active);
@@ -362,19 +341,28 @@ async function loadLiveStatus(){
   }
 }
 
-let chartInstances = [];
-let fbTargets = { alk:0, ca:0, mg:0 };
+let dosingConfig = null;
+
+async function loadDosingConfig(){
+  try{
+    const res = await fetch(FB_URL + '/dosing_config.json');
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    dosingConfig = await res.json();
+  } catch(e){
+    dosingConfig = null;
+  }
+}
 
 async function loadWaterTests(){
   const box = document.getElementById('watertest-list');
   try{
-    // Ambil 30 entri terakhir — dipakai BERSAMA buat daftar (8 terbaru) & grafik tren (semua)
+    // Ambil 30 entri terakhir — dipakai BERSAMA buat daftar (8 terbaru) & kartu parameter (sparkline)
     const res = await fetch(FB_URL + '/water_tests.json?orderBy="$key"&limitToLast=30');
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const d = await res.json();
     if(!d){
       box.innerHTML = '<div class="empty-note">Belum ada water test tersimpan.</div>';
-      renderTrendCharts([]);
+      renderDoseCards([]);
       return;
     }
     const rowsAsc  = Object.values(d).sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time));
@@ -385,71 +373,112 @@ async function loadWaterTests(){
         <div class="h-mid">pH <b>${num(r.ph)}</b> · Alk <b>${num(r.alk)}</b></div>
         <div class="h-values">Ca ${num(r.ca)} · Mg ${num(r.mg)}</div>
       </div>`).join('');
-    renderTrendCharts(rowsAsc);
+    renderDoseCards(rowsAsc);
   } catch(e){
     box.innerHTML = '<div class="err-note">Gagal memuat riwayat water test.</div>';
   }
 }
 
-function ensureChartJs(cb){
-  if(typeof Chart !== 'undefined'){ cb(); return; }
-  const s = document.createElement('script');
-  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
-  s.onload = cb;
-  document.head.appendChild(s);
+// Sparkline ringan custom (gak butuh library) — garis tren mini di tiap kartu param
+function buildSparkline(vals, color){
+  const w=100, h=26;
+  const pts = vals.map((v,i)=>({v,i})).filter(o=>o.v!==null);
+  if(pts.length<2) return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"></svg>`;
+  const min = Math.min(...pts.map(o=>o.v)), max = Math.max(...pts.map(o=>o.v));
+  const range = (max-min) || 1;
+  const step = w/((vals.length-1)||1);
+  const line = pts.map(o => (o.i*step).toFixed(1)+','+(h-((o.v-min)/range)*h).toFixed(1)).join(' ');
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+    <polyline points="${line}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  </svg>`;
 }
 
-function renderTrendCharts(rows){
-  ensureChartJs(()=>{
-    chartInstances.forEach(c=>{ try{ c.destroy(); }catch(e){} });
-    chartInstances = [];
-    if(!rows.length) return;
+// Param yg ditampilin sbg kartu — pH gak punya dosing channel langsung (dikontrol lewat
+// Kalk, bukan didosis langsung), jadi kartunya lebih simpel (gak ada botol/jadwal/mode).
+const DOSE_SPECS = [
+  { key:'alk', label:'Alkalinity', icon:'🧪', unit:'dKH', dec:1, color:'#38bdf8', tol:0.6, chem:'alk' },
+  { key:'ca',  label:'Calcium',    icon:'🦴', unit:'ppm', dec:0, color:'#10b981', tol:15,  chem:'ca'  },
+  { key:'mg',  label:'Magnesium',  icon:'💎', unit:'ppm', dec:0, color:'#f59e0b', tol:30,  chem:'mg'  },
+  { key:'ph',  label:'pH',         icon:'🌊', unit:'',    dec:2, color:'#a78bfa', tol:0.1, chem:null  },
+];
 
-    const labels = rows.map(r => shortDate(r.date));
-    // Warna & rentang gauge (gaugeMin/gaugeMax) PERSIS sama kayak di dashboard utama,
-    // biar tampilannya konsisten antara device lokal & remote watch ini.
-    // target_xxx dari live_status (kalau Anda udah set di Dosing Setup) jadi garis
-    // referensi di CHART (beda dari rentang gauge — itu fix, ini ngikutin target Anda).
-    const specs = [
-      { key:'alk', canvas:'chart-alk', color:'#38bdf8', dec:1, gMin:5,    gMax:14,   target:fbTargets.alk, tol:0.6 },
-      { key:'ca',  canvas:'chart-ca',  color:'#10b981', dec:0, gMin:350,  gMax:500,  target:fbTargets.ca,  tol:15  },
-      { key:'mg',  canvas:'chart-mg',  color:'#f59e0b', dec:0, gMin:1100, gMax:1600, target:fbTargets.mg,  tol:30  },
-      { key:'ph',  canvas:'chart-ph',  color:'#a78bfa', dec:2, gMin:7.8,  gMax:8.6,  target:0,             tol:0   },
-    ];
+function findDosingCh(chem){
+  if(!dosingConfig || !chem) return null;
+  for(let i=1;i<=4;i++){
+    const c = dosingConfig['ch'+i];
+    if(c && c.element===chem && c.enabled) return Object.assign({pump:i}, c);
+  }
+  return null;
+}
 
-    specs.forEach(sp=>{
-      const canvas = document.getElementById(sp.canvas);
-      if(!canvas) return;
-      const vals = rows.map(r => (r[sp.key]!==undefined && r[sp.key]!==null) ? parseFloat(r[sp.key]) : null);
-      const last = [...vals].reverse().find(v => v!==null);
-      setGaugeArc(sp.key, last, sp.gMin, sp.gMax, sp.dec);
+function renderDoseCards(rows){
+  const box = document.getElementById('dose-card-list');
+  if(!box) return;
+  if(!rows.length){ box.innerHTML = '<div class="empty-note">Belum ada water test tersimpan.</div>'; return; }
 
-      const ptColors = vals.map(v=>{
-        if(v===null || !sp.target) return sp.color;
-        return (v < sp.target - sp.tol*2 || v > sp.target + sp.tol*2) ? '#fb7185' : sp.color;
-      });
+  box.innerHTML = DOSE_SPECS.map(sp=>{
+    const vals = rows.map(r => (r[sp.key]!==undefined && r[sp.key]!==null) ? parseFloat(r[sp.key]) : null);
+    const valid = vals.filter(v=>v!==null);
+    const last = valid.length ? valid[valid.length-1] : null;
+    const prev = valid.length>1 ? valid[valid.length-2] : null;
+    const ch = findDosingCh(sp.chem);
+    const target = ch ? ch.target : 0;
 
-      const datasets = [{
-        data:vals, borderColor:sp.color, backgroundColor:sp.color+'22',
-        pointBackgroundColor:ptColors, pointBorderColor:ptColors, pointRadius:2.5,
-        tension:0.3, fill:true, spanGaps:true, borderWidth:1.6,
-      }];
-      if(sp.target){
-        datasets.push({ data:labels.map(()=>sp.target+sp.tol), borderColor:'#7d93a866', borderDash:[3,3], pointRadius:0, fill:false, borderWidth:1 });
-        datasets.push({ data:labels.map(()=>sp.target-sp.tol), borderColor:'#7d93a866', borderDash:[3,3], pointRadius:0, fill:false, borderWidth:1 });
-      }
+    let badgeTxt='', badgeCls='';
+    if(last!==null && target>0){
+      if(last < target - sp.tol){ badgeTxt='Low'; badgeCls='low'; }
+      else if(last > target + sp.tol){ badgeTxt='High'; badgeCls='high'; }
+      else badgeTxt='Normal';
+    }
 
-      const inst = new Chart(canvas, { type:'line', data:{ labels, datasets }, options:{
-        responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ctx.parsed.y } } },
-        scales:{
-          x:{ ticks:{ color:'#4a6072', font:{size:8}, maxRotation:0, autoSkip:true, maxTicksLimit:4 }, grid:{ display:false } },
-          y:{ ticks:{ color:'#4a6072', font:{size:8} }, grid:{ color:'#1f314255' } }
-        }
-      }});
-      chartInstances.push(inst);
-    });
-  });
+    let trendTxt = last!==null ? last.toFixed(sp.dec)+' '+sp.unit : '--';
+    if(last!==null && prev!==null){
+      const diff = last-prev;
+      trendTxt += diff>0.001 ? ' ↑' : diff<-0.001 ? ' ↓' : ' →';
+    }
+
+    let infoTop='', infoBottom='';
+    if(ch){
+      const maxDose = ch.max_dose_today||0;
+      const doseMl  = ch.dose_ml||0;
+      const freq    = (ch.slots&&ch.slots.length) || ch.dose_freq || 0;
+      const modeLbl = ch.mode==='auto' ? 'Full-Auto' : ch.mode==='semi' ? 'Semi-Auto' : 'Manual';
+      infoTop = `
+        <div class="dose-tip">💡 Posaidon: dosis maks hari ini <b>${maxDose.toFixed(1)}ml</b></div>
+        <div class="dose-rate">${doseMl.toFixed(1)}ml × ${freq}/hari</div>`;
+
+      const cap = ch.bottle_cap||0, used = ch.bottle_used||0;
+      const remain = Math.max(0, cap-used);
+      const pct = cap>0 ? Math.round(remain/cap*100) : 0;
+      const dailyMl = doseMl*freq;
+      const daysLeft = dailyMl>0 ? Math.round(remain/dailyMl) : null;
+      const fillColor = pct<15 ? 'var(--coral)' : pct<35 ? 'var(--amber)' : sp.color;
+      const schedHtml = (ch.slots||[]).map(s=>{
+        const isPast = s.st===2 || s.st===5 || s.st===3; // 2=done,5=skipped,3=missed
+        const t = String(s.h).padStart(2,'0')+':'+String(s.m).padStart(2,'0');
+        return `<span class="sched-time${isPast?' past':''}">${t}</span>`;
+      }).join('');
+      infoBottom = `
+        <div class="bottle-wrap">
+          <div class="bottle-track"><div class="bottle-fill" style="width:${pct}%;background:${fillColor}"></div></div>
+          <div class="bottle-label"><span><b>${remain.toFixed(0)}ml</b> tersisa</span><span>${pct}%${daysLeft!==null?' · ~'+daysLeft+' hr':''}</span></div>
+        </div>
+        <div class="dose-mode">Mode: <b>${modeLbl}</b></div>
+        ${schedHtml ? `<div class="dose-schedule">Jadwal: ${schedHtml}</div>` : ''}`;
+    }
+
+    return `
+      <div class="dose-card">
+        <div class="dose-card-head">
+          <div class="dose-name">${sp.icon} ${sp.label}${ch?` <span class="pump-tag">— P${ch.pump}</span>`:''}</div>
+          ${badgeTxt ? `<div class="dose-badge ${badgeCls}">${badgeTxt}</div>` : ''}
+        </div>
+        <div class="dose-value-row"><span class="dv-num">${last!==null?last.toFixed(sp.dec):'--'}</span><span class="dv-unit">${sp.unit}</span></div>
+        ${infoTop}
+        <div class="dose-spark-row">${buildSparkline(vals, sp.color)}<div class="dose-spark-meta">${rows.length} data<br><b>${trendTxt}</b></div></div>
+        ${infoBottom}
+      </div>`;
+  }).join('');
 }
 
 async function loadDoseLog(){
@@ -478,11 +507,9 @@ function num(v){ return (v===undefined||v===null) ? '--' : (typeof v==='number' 
 function shortDate(d){ if(!d) return '--'; const p=d.split('-'); return p.length===3 ? p[2]+'/'+p[1] : d; }
 
 async function refreshAll(){
-  // loadLiveStatus dijalankan duluan & ditunggu — dia ngisi fbTargets yg dipakai
-  // loadWaterTests buat gambar garis referensi target di chart. Kalau dijalanin
-  // barengan (Promise.all), race-condition: chart pertama kali render bisa gak
-  // dapet target krn loadLiveStatus belum tentu selesai duluan.
-  await loadLiveStatus();
+  // loadDosingConfig ditunggu duluan — dia ngisi dosingConfig yg dipakai renderDoseCards
+  // (lewat loadWaterTests) buat nampilin info botol/jadwal/mode/max-dose tiap kartu param.
+  await Promise.all([loadLiveStatus(), loadDosingConfig()]);
   await Promise.all([loadWaterTests(), loadDoseLog()]);
 }
 
