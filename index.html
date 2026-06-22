@@ -183,6 +183,29 @@
     .gauge-unit{ min-width:96px; padding:10px 6px 6px; }
     .dose-card{ padding:11px 12px; }
   }
+  /* ── SSE WARNING BANNER ── */
+  #sse-warning{
+    display:none;
+    background:rgba(245,158,11,0.08);
+    border:0.5px solid rgba(245,158,11,0.3);
+    border-radius:10px;
+    padding:8px 14px;
+    margin:0 0 12px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:0.75rem;
+    color:var(--amber);
+  }
+  #sse-warning.hidden{display:none!important;}
+  #sse-warning .sse-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);flex-shrink:0;}
+  #sse-warning button{
+    margin-left:auto;background:rgba(245,158,11,0.15);
+    border:0.5px solid rgba(245,158,11,0.4);color:var(--amber);
+    padding:3px 10px;border-radius:6px;font-size:0.72rem;cursor:pointer;
+  }
+  #sse-warning button:hover{background:rgba(245,158,11,0.25);}
+
   @media (prefers-reduced-motion: reduce){
     .status-badge.online .status-dot, .dosing-pill.active .dot, #refresh-btn.spinning{ animation:none !important; }
   }
@@ -223,6 +246,11 @@
   </header>
 
   <div class="last-seen" id="last-seen">Memuat data terakhir…</div>
+  <div id="sse-warning" class="hidden">
+    <span class="sse-dot"></span>
+    <span id="sse-warn-text">Streaming terputus — data mungkin tidak terbaru</span>
+    <button onclick="sseReconnect()">↻ Reconnect</button>
+  </div>
 
   <div class="hero-gauge-row" id="sensor-gauge-row">
     <div class="gauge-unit">
@@ -372,7 +400,7 @@ const FB_URL = 'https://atozqposaidon-default-rtdb.asia-southeast1.firebasedatab
 const STALE_AFTER_SEC = 150; // kalau live_status lebih tua dari ini, dianggap offline
 // Nama lengkap elemen — dose_log/dosing_config dari firmware nyimpen kode singkat
 const ELEM_LABEL = {alk:'Alkalinity', ca:'Calcium', mg:'Magnesium', kalk:'Kalkwasser', trace:'Trace Element', nopox:'NoPox'};
-const REFRESH_MS = 60000;
+const REFRESH_MS = 30000; // B+C: diperpendek jadi 30s sebagai fallback SSE
 
 let refreshTimer = null;
 
@@ -466,22 +494,61 @@ async function loadLiveStatus(){
 // reconnect sendiri kalau koneksi putus (built-in browser behavior, gak perlu kode
 // retry manual). Tetap pertahankan loadLiveStatus()+refreshAll() periodik sbg
 // fallback/resync — kalau SSE kebetulan miss satu event, polling berikutnya nutup gap-nya.
+// B+C: SSE health tracking — catat kapan terakhir kali event diterima
+let lastLiveSseMs  = 0;
+let lastDoseSseMs  = 0;
+const SSE_STALE_MS = 90000; // 90 dtk = 1.5x interval push device (60 dtk)
+
+function _sseSetWarning(show, txt){
+  const el = document.getElementById('sse-warning');
+  const tx = document.getElementById('sse-warn-text');
+  if(!el) return;
+  el.classList.toggle('hidden', !show);
+  if(tx && txt) tx.textContent = txt;
+}
+
+function sseReconnect(){
+  lastLiveSseMs = Date.now();
+  lastDoseSseMs = Date.now();
+  connectLiveStream();
+  connectDoseStatusStream();
+  _sseSetWarning(false);
+}
+
+function _sseHealthCheck(){
+  const now = Date.now();
+  const liveStale = lastLiveSseMs > 0 && (now - lastLiveSseMs) > SSE_STALE_MS;
+  const doseStale = lastDoseSseMs > 0 && (now - lastDoseSseMs) > SSE_STALE_MS;
+  if(liveStale || doseStale){
+    const which = liveStale && doseStale ? 'Semua streaming terputus'
+                : liveStale ? 'Streaming sensor terputus'
+                : 'Streaming dosing terputus';
+    _sseSetWarning(true, which + ' — data mungkin tidak terbaru');
+    // Auto-reconnect stream yg mati
+    if(liveStale){ connectLiveStream(); }
+    if(doseStale){ connectDoseStatusStream(); }
+  } else if(lastLiveSseMs > 0) {
+    _sseSetWarning(false);
+  }
+}
+
 let liveStream = null;
 function connectLiveStream(){
   if(!window.EventSource){ console.warn('[SSE] Browser gak support EventSource, pakai polling aja.'); return; }
   if(liveStream) liveStream.close();
   liveStream = new EventSource(FB_URL + '/live_status.json');
   liveStream.addEventListener('put', (e)=>{
+    lastLiveSseMs = Date.now(); // C: update health timestamp
+    _sseSetWarning(false);
     try{
       const payload = JSON.parse(e.data);
-      // firmware selalu PUT (overwrite) seluruh node /live_status, jadi path-nya "/"
       if(payload.path === '/' && payload.data){
         applyLiveStatus(payload.data);
       }
     } catch(err){ console.warn('[SSE] parse error', err); }
   });
   liveStream.onerror = ()=>{
-    console.warn('[SSE] koneksi terputus, browser reconnect otomatis…');
+    console.warn('[SSE live] error — browser akan reconnect otomatis');
   };
 }
 
@@ -516,7 +583,7 @@ function applyDoseStatus(d){
     cdEl.classList.add('running');
     let remSec = d.curr.remSec;
     const tick = ()=>{
-      if(remSec <= 0){ clearInterval(_dsCountdownInterval); _dsCountdownInterval=null; loadDoseStatus(); return; }
+      if(remSec <= 0){ clearInterval(_dsCountdownInterval); _dsCountdownInterval=null; loadDoseStatus(); setTimeout(loadDoseLog, 1500); return; } // B: refresh history saat countdown habis
       const hh = String(Math.floor(remSec/3600)).padStart(2,'0');
       const mm = String(Math.floor((remSec%3600)/60)).padStart(2,'0');
       const ss = String(remSec%60).padStart(2,'0');
@@ -544,20 +611,30 @@ async function loadDoseStatus(){
 }
 
 let doseStatusStream = null;
+let _prevDoseCurrActive = false; // B: track apakah pompa aktif di update sebelumnya
 function connectDoseStatusStream(){
   if(!window.EventSource) return;
   if(doseStatusStream) doseStatusStream.close();
   doseStatusStream = new EventSource(FB_URL + '/dose_status.json');
   doseStatusStream.addEventListener('put', (e)=>{
+    lastDoseSseMs = Date.now(); // C: update health timestamp
     try{
       const payload = JSON.parse(e.data);
       if(payload.path === '/' && payload.data){
-        applyDoseStatus(payload.data);
+        const d = payload.data;
+        // B: deteksi pompa baru selesai berjalan → refresh dose log langsung
+        const currActive = !!(d.curr && d.curr.remSec > 0);
+        if(_prevDoseCurrActive && !currActive){
+          // Pompa baru saja selesai! Refresh history sekarang juga, gak nunggu 30s
+          setTimeout(loadDoseLog, 1500); // delay 1.5s biar Firebase terisi dulu
+        }
+        _prevDoseCurrActive = currActive;
+        applyDoseStatus(d);
       }
     } catch(err){ console.warn('[SSE dose_status] parse error', err); }
   });
   doseStatusStream.onerror = ()=>{
-    console.warn('[SSE dose_status] koneksi terputus, browser reconnect otomatis…');
+    console.warn('[SSE dose_status] error — browser akan reconnect otomatis');
   };
 }
 
@@ -1015,9 +1092,10 @@ function switchView(view){
 }
 
 refreshAll();
-connectLiveStream(); // FIX item#8: live_status real-time via SSE, gak nunggu interval
-connectDoseStatusStream(); // Item#1b: prev/curr/next dosing real-time via SSE jg
-refreshTimer = setInterval(refreshAll, REFRESH_MS); // fallback/resync + refresh config & history
+connectLiveStream();
+connectDoseStatusStream();
+refreshTimer = setInterval(refreshAll, REFRESH_MS); // B+C: 30s fallback + resync
+setInterval(_sseHealthCheck, 30000); // C: watchdog SSE tiap 30 dtk
 
 // Restore session secret kalau ada (user udah unlock sebelumnya di sesi ini)
 if(_wtSecret) _wtUpdateAuthUI(true);
