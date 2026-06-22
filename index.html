@@ -885,6 +885,9 @@ function applyDoseStatus(d){
     const elemLabel = ELEM_LABEL[d.next.elem] || d.next.elem || '?';
     labelEl.textContent = `▷ Pump ${d.next.ch+1} ${elemLabel} · ${fmtMin(d.next.slotMin)} · ${num(d.next.ml)}ml`;
     cdEl.classList.remove('running');
+    // FIX#50: karena d.next sudah tampil di tengah sebagai countdown target,
+    // kolom BERIKUTNYA ▷ harus pakai d.next2 (slot setelahnya) — biar tidak duplikat
+    document.getElementById('ds-next').textContent = fmtSlotLabel(d.next2 || null);
     // Hitung countdown ke slotMin berikutnya pakai jam lokal browser
     const tickNext = ()=>{
       const now = new Date();
