@@ -266,6 +266,7 @@
   <div class="tab-nav">
     <button class="tab-btn active" onclick="switchView('dashboard')" id="tab-btn-dashboard">Dashboard</button>
     <button class="tab-btn" onclick="switchView('history')" id="tab-btn-history">Riwayat Water Test</button>
+    <button class="tab-btn" onclick="switchView('input')" id="tab-btn-input">✏️ Input Parameter</button>
   </div>
 
   <div id="view-dashboard">
@@ -302,7 +303,60 @@
     <div class="hist-list" id="watertest-list"><div class="empty-note">Memuat riwayat…</div></div>
   </div>
 
-  <footer>
+  <div id="view-input" style="display:none;">
+    <div class="section-label">Input Water Test</div>
+    <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px;">
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:14px;">
+        Catat hasil tes air secara manual dari dashboard ini. Data tersimpan langsung ke Firebase dan langsung muncul di Tren &amp; Riwayat.
+      </div>
+
+      <!-- Auth row -->
+      <div id="wt-auth-row" style="display:flex;gap:8px;align-items:center;margin-bottom:14px;padding:10px;background:#0d1f2d;border-radius:8px;border:1px solid #1e3448;">
+        <span style="font-size:0.8rem;color:var(--text-muted);white-space:nowrap;">🔑 Firebase Secret:</span>
+        <input type="password" id="wt-secret" placeholder="Database Secret (hanya di sesi ini)" style="flex:1;background:#0a1929;border:1px solid #2a4a6b;color:#e2e8f0;padding:6px 10px;border-radius:6px;font-size:0.8rem;"/>
+        <button onclick="wtUnlock()" style="background:#0ea5e9;color:#000;border:none;border-radius:6px;padding:6px 12px;font-size:0.78rem;cursor:pointer;white-space:nowrap;">Buka Akses</button>
+      </div>
+      <div id="wt-locked-note" style="font-size:0.78rem;color:#f59e0b;margin-bottom:10px;display:none;">⚠️ Masukkan Firebase Secret untuk bisa menyimpan data.</div>
+      <div id="wt-unlocked-badge" style="font-size:0.78rem;color:#10b981;margin-bottom:10px;display:none;">✅ Akses tulis aktif (sesi ini saja)</div>
+
+      <!-- Input form -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+        <div>
+          <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:3px;">🧪 Alkalinity (dKH)</label>
+          <input type="number" id="wt-alk" step="0.1" min="0" max="20" placeholder="mis. 8.3" style="width:100%;box-sizing:border-box;background:#0a1929;border:1px solid #2a4a6b;color:#e2e8f0;padding:7px 10px;border-radius:6px;font-size:0.9rem;"/>
+        </div>
+        <div>
+          <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:3px;">🦴 Calcium (ppm)</label>
+          <input type="number" id="wt-ca" step="1" min="0" max="700" placeholder="mis. 430" style="width:100%;box-sizing:border-box;background:#0a1929;border:1px solid #2a4a6b;color:#e2e8f0;padding:7px 10px;border-radius:6px;font-size:0.9rem;"/>
+        </div>
+        <div>
+          <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:3px;">💎 Magnesium (ppm)</label>
+          <input type="number" id="wt-mg" step="1" min="0" max="2000" placeholder="mis. 1350" style="width:100%;box-sizing:border-box;background:#0a1929;border:1px solid #2a4a6b;color:#e2e8f0;padding:7px 10px;border-radius:6px;font-size:0.9rem;"/>
+        </div>
+        <div>
+          <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:3px;">🌊 pH</label>
+          <input type="number" id="wt-ph" step="0.01" min="6" max="10" placeholder="mis. 8.25" style="width:100%;box-sizing:border-box;background:#0a1929;border:1px solid #2a4a6b;color:#e2e8f0;padding:7px 10px;border-radius:6px;font-size:0.9rem;"/>
+        </div>
+        <div>
+          <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:3px;">🌡️ Suhu Air (°C)</label>
+          <input type="number" id="wt-temp" step="0.1" min="20" max="32" placeholder="mis. 26.5" style="width:100%;box-sizing:border-box;background:#0a1929;border:1px solid #2a4a6b;color:#e2e8f0;padding:7px 10px;border-radius:6px;font-size:0.9rem;"/>
+        </div>
+        <div>
+          <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:3px;">📅 Tanggal & Waktu</label>
+          <input type="datetime-local" id="wt-datetime" style="width:100%;box-sizing:border-box;background:#0a1929;border:1px solid #2a4a6b;color:#e2e8f0;padding:7px 10px;border-radius:6px;font-size:0.85rem;"/>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button id="wt-save-btn" onclick="wtSave()" style="background:#0ea5e9;color:#000;border:none;border-radius:8px;padding:10px 20px;font-size:0.85rem;font-weight:700;cursor:pointer;flex:1;">💾 Simpan Water Test</button>
+        <button onclick="wtClear()" style="background:transparent;color:var(--text-muted);border:1px solid var(--line);border-radius:8px;padding:10px 16px;font-size:0.85rem;cursor:pointer;">Bersihkan</button>
+      </div>
+      <div id="wt-status" style="margin-top:10px;font-size:0.8rem;text-align:center;min-height:18px;"></div>
+    </div>
+
+    <!-- Riwayat terakhir di halaman input -->
+    <div class="section-label">Entri Terakhir</div>
+    <div class="hist-list" id="wt-recent-list"><div class="empty-note">Memuat…</div></div>
+  </div>
     Sensor &amp; status live real-time (streaming) · jadwal &amp; riwayat refresh tiap 60 detik<br>
     Data publik (read-only) dari Firebase Realtime Database · <a href="https://console.firebase.google.com" target="_blank">Dikelola lewat Firebase Console</a>
   </footer>
@@ -441,6 +495,11 @@ function fmtSlotLabel(d){
   const h = String(Math.floor(d.slotMin/60)).padStart(2,'0');
   const m = String(d.slotMin%60).padStart(2,'0');
   return `Pump ${d.ch+1} ${elemLabel} · ${h}:${m} · ${num(d.ml)}ml`;
+}
+function fmtMin(slotMin){ // konversi menit-dari-tengah-malam ke string HH:MM
+  const h = String(Math.floor(slotMin/60)).padStart(2,'0');
+  const m = String(slotMin%60).padStart(2,'0');
+  return `${h}:${m}`;
 }
 function applyDoseStatus(d){
   if(!d) d = {};
@@ -794,18 +853,171 @@ function manualRefresh(){
   refreshAll().finally(()=> setTimeout(()=>btn.classList.remove('spinning'), 500));
 }
 
+// Item #4 fix: applyDoseStatus sekarang tunjukkan countdown ke dosis BERIKUTNYA
+// kalau gak ada yg aktif — mirip yg di local web, bukan cuma "Tidak ada dosing aktif"
+function applyDoseStatus(d){
+  if(!d) d = {};
+  const labelEl = document.getElementById('ds-label');
+  const cdEl = document.getElementById('ds-countdown');
+  document.getElementById('ds-prev').textContent = fmtSlotLabel(d.prev);
+  document.getElementById('ds-next').textContent = fmtSlotLabel(d.next);
+
+  if(_dsCountdownInterval){ clearInterval(_dsCountdownInterval); _dsCountdownInterval=null; }
+
+  if(d.curr && d.curr.remSec > 0){
+    // Ada pompa aktif sedang berjalan
+    const elemLabel = ELEM_LABEL[d.curr.elem] || d.curr.elem || '?';
+    labelEl.textContent = `Pump ${d.curr.ch+1} ${elemLabel} sedang dosing… (${num(d.curr.ml)}ml)`;
+    cdEl.classList.add('running');
+    let remSec = d.curr.remSec;
+    const tick = ()=>{
+      if(remSec <= 0){ clearInterval(_dsCountdownInterval); _dsCountdownInterval=null; loadDoseStatus(); return; }
+      const hh = String(Math.floor(remSec/3600)).padStart(2,'0');
+      const mm = String(Math.floor((remSec%3600)/60)).padStart(2,'0');
+      const ss = String(remSec%60).padStart(2,'0');
+      cdEl.textContent = `${hh}:${mm}:${ss}`;
+      remSec--;
+    };
+    tick();
+    _dsCountdownInterval = setInterval(tick, 1000);
+  } else if(d.next && d.next.slotMin !== undefined){
+    // Tidak ada yg aktif, tapi ada jadwal berikutnya — tunjukin countdown ke sana
+    const elemLabel = ELEM_LABEL[d.next.elem] || d.next.elem || '?';
+    labelEl.textContent = `▷ Pump ${d.next.ch+1} ${elemLabel} · ${fmtMin(d.next.slotMin)} · ${num(d.next.ml)}ml`;
+    cdEl.classList.remove('running');
+    // Hitung countdown ke slotMin berikutnya pakai jam lokal browser
+    const tickNext = ()=>{
+      const now = new Date();
+      const nowSec = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds();
+      let targetSec = d.next.slotMin * 60;
+      let rem = targetSec - nowSec;
+      if(rem < 0) rem += 86400; // lewat tengah malam, tambah sehari
+      const hh = String(Math.floor(rem/3600)).padStart(2,'0');
+      const mm = String(Math.floor((rem%3600)/60)).padStart(2,'0');
+      const ss = String(rem%60).padStart(2,'0');
+      cdEl.textContent = `${hh}:${mm}:${ss}`;
+    };
+    tickNext();
+    _dsCountdownInterval = setInterval(tickNext, 1000);
+  } else {
+    labelEl.textContent = 'Tidak ada dosing aktif';
+    cdEl.classList.remove('running');
+    cdEl.textContent = '--:--:--';
+  }
+}
+
+// ── ITEM #5: Input Water Test ─────────────────────────────────
+let _wtSecret = sessionStorage.getItem('wt_secret') || '';
+
+function wtUnlock(){
+  const s = document.getElementById('wt-secret').value.trim();
+  if(!s){ alert('Masukkan Firebase Database Secret dulu.'); return; }
+  _wtSecret = s;
+  sessionStorage.setItem('wt_secret', s);
+  _wtUpdateAuthUI(true);
+}
+
+function _wtUpdateAuthUI(unlocked){
+  document.getElementById('wt-auth-row').style.display = unlocked ? 'none' : 'flex';
+  document.getElementById('wt-locked-note').style.display = 'none';
+  document.getElementById('wt-unlocked-badge').style.display = unlocked ? '' : 'none';
+}
+
+function wtClear(){
+  ['wt-alk','wt-ca','wt-mg','wt-ph','wt-temp'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('wt-status').textContent = '';
+}
+
+async function wtSave(){
+  if(!_wtSecret){
+    document.getElementById('wt-locked-note').style.display = '';
+    return;
+  }
+  const alk  = parseFloat(document.getElementById('wt-alk').value);
+  const ca   = parseFloat(document.getElementById('wt-ca').value);
+  const mg   = parseFloat(document.getElementById('wt-mg').value);
+  const ph   = parseFloat(document.getElementById('wt-ph').value);
+  const temp = parseFloat(document.getElementById('wt-temp').value);
+  const dtEl = document.getElementById('wt-datetime');
+  const dtVal= dtEl.value;
+
+  if([alk,ca,mg,ph].some(v=>isNaN(v))){
+    document.getElementById('wt-status').innerHTML = '<span style="color:#f87171">⚠️ Isi minimal Alk, Ca, Mg, dan pH dulu.</span>';
+    return;
+  }
+  const dt = dtVal ? new Date(dtVal) : new Date();
+  const dateStr = dt.toISOString().slice(0,10); // YYYY-MM-DD
+  const timeStr = dt.toTimeString().slice(0,5);  // HH:MM
+  const key = dt.toISOString().replace(/[:.]/g,'-').slice(0,16); // kunci unik buat Firebase node
+
+  const entry = { date: dateStr, time: timeStr, alk, ca, mg, ph };
+  if(!isNaN(temp)) entry.temp = temp;
+
+  const statusEl = document.getElementById('wt-status');
+  statusEl.innerHTML = '<span style="color:#94a3b8">Menyimpan…</span>';
+  try{
+    const url = `${FB_URL}/water_tests/${key}.json?auth=${encodeURIComponent(_wtSecret)}`;
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(entry)
+    });
+    if(!res.ok){
+      const txt = await res.text();
+      if(txt.includes('Permission denied') || res.status===401){
+        statusEl.innerHTML = '<span style="color:#f87171">❌ Secret salah atau tidak punya akses tulis.</span>';
+        _wtSecret=''; sessionStorage.removeItem('wt_secret'); _wtUpdateAuthUI(false);
+      } else {
+        statusEl.innerHTML = `<span style="color:#f87171">❌ Gagal: HTTP ${res.status}</span>`;
+      }
+      return;
+    }
+    statusEl.innerHTML = `<span style="color:#10b981">✅ Tersimpan! ${dateStr} ${timeStr} — Alk ${alk} · Ca ${ca} · Mg ${mg} · pH ${ph}</span>`;
+    wtClear();
+    // Refresh riwayat terakhir + chart
+    await loadWaterTests();
+    _wtPopulateRecent();
+  } catch(e){
+    statusEl.innerHTML = `<span style="color:#f87171">❌ Error: ${e.message}</span>`;
+  }
+}
+
+function _wtPopulateRecent(){
+  // Ambil 5 entri terakhir dari watertest-list dan tampilkan ulang di wt-recent-list
+  const src  = document.getElementById('watertest-list');
+  const dest = document.getElementById('wt-recent-list');
+  if(src && dest) dest.innerHTML = src.innerHTML;
+}
+
 // Item #6: Water Test Terakhir dipindah ke view terpisah (toggle, bukan file kedua)
 function switchView(view){
-  document.getElementById('view-dashboard').style.display = view==='dashboard' ? '' : 'none';
-  document.getElementById('view-history').style.display = view==='history' ? '' : 'none';
-  document.getElementById('tab-btn-dashboard').classList.toggle('active', view==='dashboard');
-  document.getElementById('tab-btn-history').classList.toggle('active', view==='history');
+  ['dashboard','history','input'].forEach(v=>{
+    const el = document.getElementById('view-'+v);
+    if(el) el.style.display = (v===view) ? '' : 'none';
+    const btn = document.getElementById('tab-btn-'+v);
+    if(btn) btn.classList.toggle('active', v===view);
+  });
+  if(view==='input'){
+    _wtPopulateRecent();
+    // Set datetime ke sekarang kalau belum diisi
+    const dtEl = document.getElementById('wt-datetime');
+    if(dtEl && !dtEl.value){
+      const now = new Date();
+      const local = new Date(now.getTime() - now.getTimezoneOffset()*60000);
+      dtEl.value = local.toISOString().slice(0,16);
+    }
+  }
 }
 
 refreshAll();
 connectLiveStream(); // FIX item#8: live_status real-time via SSE, gak nunggu interval
 connectDoseStatusStream(); // Item#1b: prev/curr/next dosing real-time via SSE jg
 refreshTimer = setInterval(refreshAll, REFRESH_MS); // fallback/resync + refresh config & history
+
+// Restore session secret kalau ada (user udah unlock sebelumnya di sesi ini)
+if(_wtSecret) _wtUpdateAuthUI(true);
 </script>
 </body>
 </html>
