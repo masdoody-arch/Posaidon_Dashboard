@@ -183,6 +183,20 @@
     .gauge-unit{ min-width:96px; padding:10px 6px 6px; }
     .dose-card{ padding:11px 12px; }
   }
+  /* ── LEAK WARNING BANNER ── */
+  #leak-banner-remote{
+    display:none;
+    background:rgba(251,113,133,0.1);
+    border:1.5px solid rgba(251,113,133,0.6);
+    border-radius:12px;
+    padding:14px 16px;
+    margin:0 0 16px;
+  }
+  #leak-banner-remote.active{display:block;}
+  .leak-title{font-size:1rem;font-weight:700;color:var(--coral);margin-bottom:4px;}
+  .leak-sub{font-size:0.78rem;color:#fca5a5;margin-bottom:10px;line-height:1.5}
+  .leak-btn{width:100%;padding:9px;background:var(--coral);color:#fff;border:none;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;}
+
   /* ── SSE WARNING BANNER ── */
   #sse-warning{
     display:none;
@@ -246,6 +260,11 @@
   </header>
 
   <div class="last-seen" id="last-seen">Memuat data terakhir…</div>
+  <div id="leak-banner-remote">
+    <div class="leak-title">🚨 KEBOCORAN TERDETEKSI!</div>
+    <div class="leak-sub" id="leak-remote-detail">Sensor GX12 mendeteksi air · Semua pompa & relay dimatikan otomatis oleh Posaidon · Segera periksa aquarium Anda!</div>
+    <button class="leak-btn" onclick="resetLeakRemote()">✅ Kebocoran Sudah Diatasi — Reset via Remote</button>
+  </div>
   <div id="sse-warning" class="hidden">
     <span class="sse-dot"></span>
     <span id="sse-warn-text">Streaming terputus — data mungkin tidak terbaru</span>
@@ -447,6 +466,17 @@ function applyLiveStatus(d){
   statusBadge.classList.toggle('offline', !isOnline);
   statusLabel.textContent = isOnline ? 'Online' : 'Offline';
   document.getElementById('last-seen').innerHTML = 'Update terakhir <b>' + fmtRelative(d.updated_at) + '</b>';
+
+  // FIX#53: leak detection banner
+  const lkBanner = document.getElementById('leak-banner-remote');
+  const lkDetail = document.getElementById('leak-remote-detail');
+  if(lkBanner){
+    lkBanner.classList.toggle('active', d.leak_detected===true);
+    if(d.leak_detected && lkDetail){
+      const port = d.leak_port >= 0 ? 'Port GX12-'+(d.leak_port+1) : 'Sensor GX12';
+      lkDetail.textContent = port+' mendeteksi air · Semua pompa & relay dimatikan otomatis · Segera periksa aquarium Anda!';
+    }
+  }
 
   // Gauge suhu air — rentang 20-32°C, sama persis kayak gauge-water-arc di dashboard utama
   setGaugeArc('watertemp', d.temp, 20, 32, 1);
@@ -1088,6 +1118,24 @@ function switchView(view){
       const local = new Date(now.getTime() - now.getTimezoneOffset()*60000);
       dtEl.value = local.toISOString().slice(0,16);
     }
+  }
+}
+
+async function resetLeakRemote(){
+  const secret = _wtSecret || sessionStorage.getItem('wt_secret');
+  if(!secret){
+    alert('Masukkan Firebase Secret dulu di tab "Input Parameter" untuk bisa reset dari remote.');
+    return;
+  }
+  if(!confirm('Konfirmasi: kebocoran sudah diatasi dan aman untuk mengaktifkan kembali sistem?')) return;
+  try{
+    const url = `${FB_URL}/live_status/leak_detected.json?auth=${encodeURIComponent(secret)}`;
+    await fetch(url, {method:'PUT', headers:{'Content-Type':'application/json'}, body:'false'});
+    const lkBanner = document.getElementById('leak-banner-remote');
+    if(lkBanner) lkBanner.classList.remove('active');
+    alert('✅ Reset berhasil dikirim. Posaidon akan mengaktifkan kembali sistem dalam 60 detik.');
+  } catch(e){
+    alert('Gagal reset: '+e.message);
   }
 }
 
